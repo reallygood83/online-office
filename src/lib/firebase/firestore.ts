@@ -8,11 +8,14 @@ import {
   deleteDoc,
   query,
   where,
+  orderBy,
   serverTimestamp,
   writeBatch,
+  arrayUnion,
+  arrayRemove,
 } from 'firebase/firestore';
 import { db } from './config';
-import { Schedule, Class, SpecialTeacher, Settings, DayOfWeek } from '@/types';
+import { Schedule, Class, SpecialTeacher, Settings, DayOfWeek, User } from '@/types';
 
 export async function getSchedules(semester: 1 | 2, type: 'teacher' | 'class'): Promise<Schedule[]> {
   const schedulesRef = collection(db, 'schedules');
@@ -159,6 +162,127 @@ export async function batchCreateTeachers(teachers: SpecialTeacher[]): Promise<v
   teachers.forEach(teacher => {
     const teacherRef = doc(db, 'teachers', teacher.id);
     batch.set(teacherRef, teacher);
+  });
+  
+  await batch.commit();
+}
+
+export async function getAllUsers(): Promise<User[]> {
+  try {
+    const usersRef = collection(db, 'users');
+    const snapshot = await getDocs(usersRef);
+    return snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as User));
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    return [];
+  }
+}
+
+export async function updateUserRole(uid: string, isAdmin: boolean): Promise<void> {
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, {
+    isAdmin,
+    role: isAdmin ? 'admin' : 'teacher',
+  });
+}
+
+export async function addAdmin(uid: string): Promise<void> {
+  await updateUserRole(uid, true);
+  const settingsRef = doc(db, 'settings', 'main');
+  await updateDoc(settingsRef, { admins: arrayUnion(uid) });
+}
+
+export async function removeAdmin(uid: string): Promise<void> {
+  await updateUserRole(uid, false);
+  const settingsRef = doc(db, 'settings', 'main');
+  await updateDoc(settingsRef, { admins: arrayRemove(uid) });
+}
+
+export interface TeacherRealName {
+  teacherId: string;
+  realName: string;
+  updatedAt?: any;
+}
+
+export async function getTeacherRealNames(): Promise<Record<string, string>> {
+  try {
+    const teachersRef = collection(db, 'teacherNames');
+    const snapshot = await getDocs(teachersRef);
+    const names: Record<string, string> = {};
+    snapshot.docs.forEach(doc => {
+      names[doc.id] = doc.data().realName;
+    });
+    return names;
+  } catch (error) {
+    console.error('Failed to fetch teacher names:', error);
+    return {};
+  }
+}
+
+export async function updateTeacherRealName(teacherId: string, realName: string): Promise<void> {
+  const teacherRef = doc(db, 'teacherNames', teacherId);
+  await setDoc(teacherRef, {
+    teacherId,
+    realName,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function batchUpdateTeacherRealNames(names: Record<string, string>): Promise<void> {
+  const batch = writeBatch(db);
+  
+  Object.entries(names).forEach(([teacherId, realName]) => {
+    const teacherRef = doc(db, 'teacherNames', teacherId);
+    batch.set(teacherRef, {
+      teacherId,
+      realName,
+      updatedAt: serverTimestamp(),
+    });
+  });
+  
+  await batch.commit();
+}
+
+export interface ClassHomeTeacher {
+  classId: string;
+  homeTeacher: string;
+  updatedAt?: any;
+}
+
+export async function getClassHomeTeachers(): Promise<Record<string, string>> {
+  try {
+    const classesRef = collection(db, 'classHomeTeachers');
+    const snapshot = await getDocs(classesRef);
+    const teachers: Record<string, string> = {};
+    snapshot.docs.forEach(doc => {
+      teachers[doc.id] = doc.data().homeTeacher;
+    });
+    return teachers;
+  } catch (error) {
+    console.error('Failed to fetch home teachers:', error);
+    return {};
+  }
+}
+
+export async function updateClassHomeTeacher(classId: string, homeTeacher: string): Promise<void> {
+  const classRef = doc(db, 'classHomeTeachers', classId);
+  await setDoc(classRef, {
+    classId,
+    homeTeacher,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function batchUpdateClassHomeTeachers(teachers: Record<string, string>): Promise<void> {
+  const batch = writeBatch(db);
+  
+  Object.entries(teachers).forEach(([classId, homeTeacher]) => {
+    const classRef = doc(db, 'classHomeTeachers', classId);
+    batch.set(classRef, {
+      classId,
+      homeTeacher,
+      updatedAt: serverTimestamp(),
+    });
   });
   
   await batch.commit();
