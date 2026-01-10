@@ -137,11 +137,26 @@ export const TEACHER_INFO: Record<string, { subject: string; weeklyHours: number
   '도덕': { subject: '도덕', weeklyHours: 16, targetGrades: '학기별 상이' },
 };
 
+export const ALL_SUBJECTS = [
+  '국어', '수학', '통합교과', '도덕', '사회', '과학',
+  '음악', '미술', '체육', '실과', '영어', '창체'
+] as const;
+
+export const SPECIALIST_SUBJECTS = ['영어', '체육', '음악', '도덕'] as const;
+
 export const SUBJECT_BG_COLORS: Record<string, string> = {
-  '영어': 'bg-yellow-300',
-  '체육': 'bg-green-300',
-  '음악': 'bg-pink-300',
+  '국어': 'bg-blue-200',
+  '수학': 'bg-red-200',
+  '통합교과': 'bg-amber-200',
   '도덕': 'bg-purple-300',
+  '사회': 'bg-orange-200',
+  '과학': 'bg-cyan-200',
+  '음악': 'bg-pink-300',
+  '미술': 'bg-rose-200',
+  '체육': 'bg-green-300',
+  '실과': 'bg-lime-200',
+  '영어': 'bg-yellow-300',
+  '창체': 'bg-teal-200',
 };
 
 export const ALL_CLASSES = [

@@ -1,7 +1,7 @@
 'use client';
 
 import { DAY_LABELS, DayOfWeek } from '@/types';
-import { SUBJECT_BG_COLORS, TEACHER_INFO, TEACHERS } from '@/data/scheduleData';
+import { SUBJECT_BG_COLORS, TEACHER_INFO, TEACHERS, ALL_SUBJECTS } from '@/data/scheduleData';
 import { useTeacherNames } from '@/lib/hooks/useTeacherNames';
 
 interface TeacherScheduleTableProps {
@@ -132,22 +132,50 @@ export function EditableClassScheduleTable({
       ? `${realName}(${info.subject})`
       : `${info.subject} (${t})`;
     return {
-      value: t,
+      value: `teacher:${t}`,
       label,
       subject: info.subject,
+      type: 'teacher' as const,
     };
   });
 
-  const handleSelectChange = (day: DayOfWeek, periodIdx: number, teacherId: string) => {
-    if (teacherId === '') {
+  const subjectOnlyOptions = ALL_SUBJECTS
+    .filter(s => !['영어', '체육', '음악', '도덕'].includes(s))
+    .map(s => ({
+      value: `subject:${s}`,
+      label: s,
+      subject: s,
+      type: 'subject' as const,
+    }));
+
+  const allOptions = [...teacherOptions, ...subjectOnlyOptions];
+
+  const handleSelectChange = (day: DayOfWeek, periodIdx: number, value: string) => {
+    if (value === '') {
       onCellChange(day, periodIdx, null);
-    } else {
-      const info = TEACHER_INFO[teacherId];
+      return;
+    }
+
+    const [type, id] = value.split(':');
+    
+    if (type === 'teacher') {
+      const info = TEACHER_INFO[id];
       onCellChange(day, periodIdx, {
         subject: info.subject,
-        teacher: teacherId,
+        teacher: id,
+      });
+    } else if (type === 'subject') {
+      onCellChange(day, periodIdx, {
+        subject: id,
+        teacher: '',
       });
     }
+  };
+
+  const getCellValue = (cell: { subject: string; teacher: string } | null): string => {
+    if (!cell) return '';
+    if (cell.teacher) return `teacher:${cell.teacher}`;
+    return `subject:${cell.subject}`;
   };
 
   return (
@@ -157,7 +185,7 @@ export function EditableClassScheduleTable({
           <tr>
             <th className="w-16">교시</th>
             {days.map((day) => (
-              <th key={day} className="w-32">{DAY_LABELS[day]}</th>
+              <th key={day} className="w-36">{DAY_LABELS[day]}</th>
             ))}
           </tr>
         </thead>
@@ -167,44 +195,32 @@ export function EditableClassScheduleTable({
               <td className="text-center font-bold bg-gray-100">{period}</td>
               {days.map((day) => {
                 const cell = schedule[day][idx];
-                const bgColor = cell ? SUBJECT_BG_COLORS[cell.subject] : '';
+                const bgColor = cell ? (SUBJECT_BG_COLORS[cell.subject] || 'bg-gray-200') : '';
 
-                if (isEditMode && !cell) {
+                if (isEditMode) {
                   return (
-                    <td key={day} className="p-1 bg-yellow-50">
+                    <td key={day} className={`p-1 ${cell ? bgColor : 'bg-yellow-50'}`}>
                       <select
-                        className="w-full px-2 py-1.5 border-2 border-black rounded font-semibold text-sm bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                        value=""
+                        className="w-full px-2 py-1.5 border-2 border-black rounded font-semibold text-sm bg-white/90 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        value={getCellValue(cell)}
                         onChange={(e) => handleSelectChange(day, idx, e.target.value)}
                       >
                         <option value="">선택...</option>
-                        {teacherOptions.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  );
-                }
-
-                if (isEditMode && cell) {
-                  return (
-                    <td key={day} className={`p-1 ${bgColor}`}>
-                      <div className="relative">
-                        <select
-                          className="w-full px-2 py-1.5 border-2 border-black rounded font-semibold text-sm bg-white/80 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                          value={cell.teacher}
-                          onChange={(e) => handleSelectChange(day, idx, e.target.value)}
-                        >
-                          <option value="">비우기</option>
+                        <optgroup label="📚 전담교사 수업">
                           {teacherOptions.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                               {opt.label}
                             </option>
                           ))}
-                        </select>
-                      </div>
+                        </optgroup>
+                        <optgroup label="📖 담임 수업">
+                          {subjectOnlyOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
                     </td>
                   );
                 }
@@ -219,9 +235,11 @@ export function EditableClassScheduleTable({
                     {cell ? (
                       <div>
                         <div className="font-bold">{cell.subject}</div>
-                        <div className="text-xs text-gray-600">
-                          ({formatTeacherWithSubject(cell.teacher, cell.subject)})
-                        </div>
+                        {cell.teacher && (
+                          <div className="text-xs text-gray-600">
+                            ({formatTeacherWithSubject(cell.teacher, cell.subject)})
+                          </div>
+                        )}
                       </div>
                     ) : (
                       '-'

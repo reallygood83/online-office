@@ -3,22 +3,31 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input } from '@/components/ui';
 import { initializeScheduleData, checkDataInitialized } from '@/lib/firebase/scheduleService';
+import { getAdminCode, updateAdminCode } from '@/lib/firebase/firestore';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 export default function AdminSettingsPage() {
   const [specialCode, setSpecialCode] = useState('20261234');
+  const [adminCode, setAdminCode] = useState('');
+  const [newAdminCode, setNewAdminCode] = useState('');
+  const [confirmAdminCode, setConfirmAdminCode] = useState('');
   const [currentSemester, setCurrentSemester] = useState<1 | 2>(1);
   const [currentYear, setCurrentYear] = useState(2026);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingAdminCode, setIsSavingAdminCode] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [isDataInitialized, setIsDataInitialized] = useState<boolean | null>(null);
   const [initMessage, setInitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [adminCodeMessage, setAdminCodeMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     const checkInit = async () => {
       const initialized = await checkDataInitialized();
       setIsDataInitialized(initialized);
+
+      const currentAdminCode = await getAdminCode();
+      setAdminCode(currentAdminCode);
 
       if (initialized) {
         try {
@@ -85,6 +94,40 @@ export default function AdminSettingsPage() {
     }
   }, [initMessage]);
 
+  useEffect(() => {
+    if (adminCodeMessage) {
+      const timer = setTimeout(() => setAdminCodeMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [adminCodeMessage]);
+
+  const handleAdminCodeChange = async () => {
+    if (!newAdminCode.trim()) {
+      setAdminCodeMessage({ type: 'error', text: '새 비밀번호를 입력하세요.' });
+      return;
+    }
+    if (newAdminCode.length < 4) {
+      setAdminCodeMessage({ type: 'error', text: '비밀번호는 4자리 이상이어야 합니다.' });
+      return;
+    }
+    if (newAdminCode !== confirmAdminCode) {
+      setAdminCodeMessage({ type: 'error', text: '비밀번호 확인이 일치하지 않습니다.' });
+      return;
+    }
+
+    setIsSavingAdminCode(true);
+    try {
+      await updateAdminCode(newAdminCode);
+      setAdminCode(newAdminCode);
+      setNewAdminCode('');
+      setConfirmAdminCode('');
+      setAdminCodeMessage({ type: 'success', text: '관리자 비밀번호가 변경되었습니다!' });
+    } catch (error: any) {
+      setAdminCodeMessage({ type: 'error', text: `변경 실패: ${error.message}` });
+    }
+    setIsSavingAdminCode(false);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -101,6 +144,59 @@ export default function AdminSettingsPage() {
           <p className="font-bold">{initMessage.text}</p>
         </div>
       )}
+
+      <Card className="border-4 border-red-400 bg-red-50">
+        <CardHeader>
+          <CardTitle>🔐 관리자 비밀번호 설정</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-3 bg-white rounded-lg border-2 border-gray-200">
+              <p className="text-sm text-gray-600">현재 관리자 비밀번호</p>
+              <p className="font-bold text-lg font-mono">{adminCode ? '••••••••' : '미설정'}</p>
+            </div>
+
+            {adminCodeMessage && (
+              <div
+                className={`p-3 rounded-lg ${
+                  adminCodeMessage.type === 'success' ? 'bg-green-100 border-green-400' : 'bg-red-100 border-red-400'
+                } border-2`}
+              >
+                <p className="font-bold text-sm">{adminCodeMessage.text}</p>
+              </div>
+            )}
+
+            <Input
+              label="새 비밀번호"
+              type="password"
+              value={newAdminCode}
+              onChange={(e) => setNewAdminCode(e.target.value)}
+              placeholder="4자리 이상 입력"
+            />
+            <Input
+              label="비밀번호 확인"
+              type="password"
+              value={confirmAdminCode}
+              onChange={(e) => setConfirmAdminCode(e.target.value)}
+              placeholder="비밀번호를 다시 입력"
+            />
+
+            <div className="p-3 bg-yellow-100 rounded-lg border-2 border-yellow-400">
+              <p className="text-sm font-semibold">
+                ⚠️ 비밀번호 변경 시 새 관리자는 새 비밀번호로 인증해야 합니다.
+              </p>
+            </div>
+
+            <Button
+              onClick={handleAdminCodeChange}
+              disabled={isSavingAdminCode || !newAdminCode.trim()}
+              className="bg-red-400 hover:bg-red-500"
+            >
+              {isSavingAdminCode ? '변경 중...' : '🔑 비밀번호 변경'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-4 border-orange-400 bg-orange-50">
         <CardHeader>

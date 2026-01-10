@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -12,15 +12,18 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading, logout } = useAuth();
+
+  const isVerifyPage = pathname === '/admin/verify';
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
-    } else if (!loading && user && !user.isAdmin) {
-      router.push('/dashboard');
+    } else if (!loading && user && !user.isAdmin && !isVerifyPage) {
+      router.push('/admin/verify');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isVerifyPage]);
 
   if (loading) {
     return (
@@ -33,7 +36,15 @@ export default function AdminLayout({
     );
   }
 
-  if (!user || !user.isAdmin) {
+  if (!user) {
+    return null;
+  }
+
+  if (isVerifyPage) {
+    return <>{children}</>;
+  }
+
+  if (!user.isAdmin) {
     return null;
   }
 

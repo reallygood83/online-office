@@ -287,3 +287,81 @@ export async function batchUpdateClassHomeTeachers(teachers: Record<string, stri
   
   await batch.commit();
 }
+
+export interface TeacherInfoData {
+  subject: string;
+  weeklyHours: number;
+  targetGrades: string;
+}
+
+export async function getTeacherInfoOverrides(): Promise<Record<string, Partial<TeacherInfoData>>> {
+  try {
+    const teachersRef = collection(db, 'teacherInfoOverrides');
+    const snapshot = await getDocs(teachersRef);
+    const overrides: Record<string, Partial<TeacherInfoData>> = {};
+    snapshot.docs.forEach(docSnap => {
+      const data = docSnap.data();
+      overrides[docSnap.id] = {
+        subject: data.subject,
+        weeklyHours: data.weeklyHours,
+        targetGrades: data.targetGrades,
+      };
+    });
+    return overrides;
+  } catch (error) {
+    console.error('Failed to fetch teacher info overrides:', error);
+    return {};
+  }
+}
+
+export async function updateTeacherInfo(
+  teacherId: string, 
+  data: Partial<TeacherInfoData>
+): Promise<void> {
+  const teacherRef = doc(db, 'teacherInfoOverrides', teacherId);
+  await setDoc(teacherRef, {
+    teacherId,
+    ...data,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+export async function getAdminCode(): Promise<string> {
+  try {
+    const settingsRef = doc(db, 'settings', 'main');
+    const snapshot = await getDoc(settingsRef);
+    if (snapshot.exists()) {
+      return snapshot.data().adminCode || '20261234';
+    }
+    return '20261234';
+  } catch (error) {
+    console.error('Failed to get admin code:', error);
+    return '20261234';
+  }
+}
+
+export async function verifyAdminCode(code: string): Promise<boolean> {
+  const adminCode = await getAdminCode();
+  return code === adminCode;
+}
+
+export async function updateAdminCode(newCode: string): Promise<void> {
+  const settingsRef = doc(db, 'settings', 'main');
+  await setDoc(settingsRef, {
+    adminCode: newCode,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+export async function setUserAsAdmin(uid: string): Promise<void> {
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, {
+    isAdmin: true,
+    role: 'admin',
+  });
+  
+  const settingsRef = doc(db, 'settings', 'main');
+  await updateDoc(settingsRef, {
+    admins: arrayUnion(uid),
+  });
+}

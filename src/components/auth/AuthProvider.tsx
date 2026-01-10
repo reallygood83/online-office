@@ -34,8 +34,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setFirebaseUser(null);
   };
 
+  const refreshUser = async () => {
+    if (firebaseUser) {
+      const userData = await getUserData(firebaseUser.uid);
+      setUser(userData);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ firebaseUser, user, loading, logout }}>
+    <AuthContext.Provider value={{ firebaseUser, user, loading, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
