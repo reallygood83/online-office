@@ -16,8 +16,13 @@ export default function AdminUsersPage() {
 
   const loadUsers = async () => {
     setLoading(true);
-    const fetchedUsers = await getAllUsers();
-    setUsers(fetchedUsers);
+    try {
+      const fetchedUsers = await getAllUsers();
+      console.log('Fetched users:', fetchedUsers);
+      setUsers(fetchedUsers);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
     setLoading(false);
   };
 

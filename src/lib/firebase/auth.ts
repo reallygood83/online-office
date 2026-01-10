@@ -66,7 +66,7 @@ export async function getUserData(uid: string): Promise<User | null> {
       return { uid, ...docSnap.data() } as User;
     }
   } catch (error) {
-    console.log('Firestore not available, using fallback user data');
+    console.error('Failed to get user data from Firestore:', error);
   }
   
   const currentUser = auth.currentUser;
@@ -76,7 +76,7 @@ export async function getUserData(uid: string): Promise<User | null> {
       email: currentUser.email || '',
       displayName: currentUser.displayName || '사용자',
       role: 'teacher',
-      isAdmin: true,
+      isAdmin: false,
       createdAt: null as any,
       lastLoginAt: null as any,
     };
