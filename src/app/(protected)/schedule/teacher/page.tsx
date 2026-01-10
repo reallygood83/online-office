@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Select } from '@/components/ui';
 import { TeacherScheduleTable } from '@/components/schedule/ScheduleTable';
 import { SemesterSelector } from '@/components/schedule/SemesterSelector';
+import { useTeacherNames } from '@/lib/hooks/useTeacherNames';
 import {
   TEACHERS,
   TEACHER_INFO,
@@ -15,13 +16,20 @@ import {
 export default function TeacherSchedulePage() {
   const [semester, setSemester] = useState<1 | 2>(1);
   const [selectedTeacher, setSelectedTeacher] = useState<string>(TEACHERS[0]);
+  const { teacherRealNames, formatTeacherWithSubject } = useTeacherNames();
 
   const scheduleData = semester === 1 ? TEACHER_SCHEDULES_SEMESTER1 : TEACHER_SCHEDULES_SEMESTER2;
   const teacherInfo = TEACHER_INFO[selectedTeacher];
 
+  const getTeacherDisplayName = (teacherId: string) => {
+    const realName = teacherRealNames[teacherId];
+    const info = TEACHER_INFO[teacherId];
+    return realName ? `${realName}(${info.subject})` : teacherId;
+  };
+
   const teacherOptions = TEACHERS.map((t) => ({
     value: t,
-    label: `${t} (${TEACHER_INFO[t].subject})`,
+    label: getTeacherDisplayName(t),
   }));
 
   return (
@@ -64,7 +72,7 @@ export default function TeacherSchedulePage() {
                     }
                   `}
                 >
-                  {teacher}
+                  {getTeacherDisplayName(teacher)}
                 </button>
               );
             })}
@@ -79,7 +87,7 @@ export default function TeacherSchedulePage() {
               {teacherInfo.subject}
             </span>
             <div>
-              <CardTitle>{selectedTeacher}</CardTitle>
+              <CardTitle>{getTeacherDisplayName(selectedTeacher)}</CardTitle>
               <p className="text-sm text-gray-600 mt-1">
                 주 {teacherInfo.weeklyHours}시간 | 담당: {teacherInfo.targetGrades}
               </p>
@@ -103,13 +111,16 @@ export default function TeacherSchedulePage() {
             {TEACHERS.map((teacher) => {
               const info = TEACHER_INFO[teacher];
               const bgColor = SUBJECT_BG_COLORS[info.subject];
+              const realName = teacherRealNames[teacher];
               return (
                 <div
                   key={teacher}
                   className={`neo-card ${bgColor} p-4 rounded-xl cursor-pointer transition-transform hover:translate-y-[-2px]`}
                   onClick={() => setSelectedTeacher(teacher)}
                 >
-                  <div className="font-extrabold text-lg">{teacher}</div>
+                  <div className="font-extrabold text-lg">
+                    {realName ? `${realName}(${info.subject})` : teacher}
+                  </div>
                   <div className="text-sm opacity-80">{info.subject}</div>
                   <div className="font-bold text-2xl mt-2">{info.weeklyHours}시간</div>
                 </div>
