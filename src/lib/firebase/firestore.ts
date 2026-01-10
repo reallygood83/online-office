@@ -398,16 +398,27 @@ export async function getSpecialRooms(): Promise<SpecialRoom[]> {
 
 export async function addSpecialRoom(room: Omit<SpecialRoom, 'id' | 'createdAt'>): Promise<string> {
   const roomsRef = collection(db, 'specialRooms');
-  const docRef = await addDoc(roomsRef, {
-    ...room,
+  const data: Record<string, unknown> = {
+    name: room.name,
+    color: room.color,
+    order: room.order,
     createdAt: serverTimestamp(),
-  });
+  };
+  if (room.description) {
+    data.description = room.description;
+  }
+  const docRef = await addDoc(roomsRef, data);
   return docRef.id;
 }
 
 export async function updateSpecialRoom(roomId: string, data: Partial<Omit<SpecialRoom, 'id' | 'createdAt'>>): Promise<void> {
   const roomRef = doc(db, 'specialRooms', roomId);
-  await updateDoc(roomRef, data);
+  const cleanData: Record<string, unknown> = {};
+  if (data.name !== undefined) cleanData.name = data.name;
+  if (data.color !== undefined) cleanData.color = data.color;
+  if (data.order !== undefined) cleanData.order = data.order;
+  if (data.description !== undefined) cleanData.description = data.description;
+  await updateDoc(roomRef, cleanData);
 }
 
 export async function deleteSpecialRoom(roomId: string): Promise<void> {
