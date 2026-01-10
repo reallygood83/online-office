@@ -355,13 +355,15 @@ export async function updateAdminCode(newCode: string): Promise<void> {
 
 export async function setUserAsAdmin(uid: string): Promise<void> {
   const userRef = doc(db, 'users', uid);
-  await updateDoc(userRef, {
+  await setDoc(userRef, {
     isAdmin: true,
     role: 'admin',
-  });
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
   
   const settingsRef = doc(db, 'settings', 'main');
-  await updateDoc(settingsRef, {
+  await setDoc(settingsRef, {
     admins: arrayUnion(uid),
-  });
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
 }
