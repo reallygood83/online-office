@@ -108,3 +108,93 @@ export const SUBJECT_COLORS: Record<string, string> = {
   '도덕': 'bg-purple-300',
   '-': 'bg-gray-100',
 };
+
+// ============================================
+// 특별실 예약 시스템 타입
+// ============================================
+
+// 특별실 타입
+export interface SpecialRoom {
+  id: string;                    // auto-generated
+  name: string;                  // "과학실", "컴퓨터실1" 등
+  description?: string;          // 설명 (선택)
+  color: string;                 // 색상 클래스 (bg-blue-300 등)
+  order: number;                 // 표시 순서
+  createdAt: Timestamp;
+}
+
+// 특별실 예약 타입
+export interface RoomReservation {
+  id: string;                    // auto-generated
+  roomId: string;                // 특별실 ID
+  weekStart: string;             // 주 시작일 YYYY-MM-DD (월요일)
+  day: DayOfWeek;                // 요일
+  period: ReservationPeriod;     // 교시 (1-6)
+  reservedBy: string;            // 예약자 uid
+  reserverName: string;          // 예약자 이름
+  className?: string;            // 수업 학급 (선택)
+  purpose?: string;              // 사용 목적 (선택)
+  createdAt: Timestamp;
+}
+
+// 예약용 교시 타입 (1~6)
+export type ReservationPeriod = 1 | 2 | 3 | 4 | 5 | 6;
+
+// 특별실 기본 색상 옵션
+export const ROOM_COLORS = [
+  'bg-blue-300',
+  'bg-green-300',
+  'bg-yellow-300',
+  'bg-pink-300',
+  'bg-purple-300',
+  'bg-orange-300',
+  'bg-cyan-300',
+  'bg-red-300',
+] as const;
+
+// ============================================
+// 학사일정 (캘린더) 타입
+// ============================================
+
+// 학사일정 이벤트 타입
+export interface SchoolEvent {
+  id: string;                    // auto-generated
+  title: string;                 // 일정 제목
+  date: string;                  // YYYY-MM-DD
+  endDate?: string;              // 종료일 (여러 날일 경우)
+  category: EventCategory;       // 분류
+  description?: string;          // 상세 설명
+  isHoliday: boolean;            // 휴일 여부
+  createdBy: string;             // 작성자 uid
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+// 일정 분류
+export type EventCategory = 
+  | 'academic'      // 학사일정 (입학식, 졸업식 등)
+  | 'exam'          // 시험/평가
+  | 'event'         // 행사 (운동회, 학예회 등)
+  | 'meeting'       // 회의/연수
+  | 'holiday'       // 공휴일/방학
+  | 'other';        // 기타
+
+// 일정 분류 라벨
+export const EVENT_CATEGORY_LABELS: Record<EventCategory, string> = {
+  academic: '학사일정',
+  exam: '시험/평가',
+  event: '학교행사',
+  meeting: '회의/연수',
+  holiday: '공휴일/방학',
+  other: '기타',
+};
+
+// 일정 분류별 색상
+export const EVENT_CATEGORY_COLORS: Record<EventCategory, string> = {
+  academic: 'bg-blue-300',
+  exam: 'bg-red-300',
+  event: 'bg-green-300',
+  meeting: 'bg-yellow-300',
+  holiday: 'bg-purple-300',
+  other: 'bg-gray-300',
+};

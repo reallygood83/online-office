@@ -13,9 +13,22 @@ import {
   writeBatch,
   arrayUnion,
   arrayRemove,
+  addDoc,
 } from 'firebase/firestore';
 import { db } from './config';
-import { Schedule, Class, SpecialTeacher, Settings, DayOfWeek, User } from '@/types';
+import { 
+  Schedule, 
+  Class, 
+  SpecialTeacher, 
+  Settings, 
+  DayOfWeek, 
+  User,
+  SpecialRoom,
+  RoomReservation,
+  ReservationPeriod,
+  SchoolEvent,
+  EventCategory,
+} from '@/types';
 
 export async function getSchedules(semester: 1 | 2, type: 'teacher' | 'class'): Promise<Schedule[]> {
   const schedulesRef = collection(db, 'schedules');
@@ -374,4 +387,116 @@ export async function setUserAsAdmin(uid: string, userInfo?: { email: string; di
     admins: arrayUnion(uid),
     updatedAt: serverTimestamp(),
   }, { merge: true });
+}
+
+export async function getSpecialRooms(): Promise<SpecialRoom[]> {
+  const roomsRef = collection(db, 'specialRooms');
+  const q = query(roomsRef, orderBy('order', 'asc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as SpecialRoom));
+}
+
+export async function addSpecialRoom(room: Omit<SpecialRoom, 'id' | 'createdAt'>): Promise<string> {
+  const roomsRef = collection(db, 'specialRooms');
+  const docRef = await addDoc(roomsRef, {
+    ...room,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function updateSpecialRoom(roomId: string, data: Partial<Omit<SpecialRoom, 'id' | 'createdAt'>>): Promise<void> {
+  const roomRef = doc(db, 'specialRooms', roomId);
+  await updateDoc(roomRef, data);
+}
+
+export async function deleteSpecialRoom(roomId: string): Promise<void> {
+  const roomRef = doc(db, 'specialRooms', roomId);
+  await deleteDoc(roomRef);
+}
+
+export async function getWeekReservations(roomId: string, weekStart: string): Promise<RoomReservation[]> {
+  const reservationsRef = collection(db, 'roomReservations');
+  const q = query(
+    reservationsRef,
+    where('roomId', '==', roomId),
+    where('weekStart', '==', weekStart)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as RoomReservation));
+}
+
+export async function getAllWeekReservations(weekStart: string): Promise<RoomReservation[]> {
+  const reservationsRef = collection(db, 'roomReservations');
+  const q = query(reservationsRef, where('weekStart', '==', weekStart));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as RoomReservation));
+}
+
+export async function createReservation(
+  reservation: Omit<RoomReservation, 'id' | 'createdAt'>
+): Promise<string> {
+  const reservationsRef = collection(db, 'roomReservations');
+  const docRef = await addDoc(reservationsRef, {
+    ...reservation,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function deleteReservation(reservationId: string): Promise<void> {
+  const reservationRef = doc(db, 'roomReservations', reservationId);
+  await deleteDoc(reservationRef);
+}
+
+export async function getSchoolEvents(year: number, month: number): Promise<SchoolEvent[]> {
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+  const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
+  
+  const eventsRef = collection(db, 'schoolEvents');
+  const q = query(
+    eventsRef,
+    where('date', '>=', startDate),
+    where('date', '<=', endDate),
+    orderBy('date', 'asc')
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as SchoolEvent));
+}
+
+export async function getSchoolEventsByRange(startDate: string, endDate: string): Promise<SchoolEvent[]> {
+  const eventsRef = collection(db, 'schoolEvents');
+  const q = query(
+    eventsRef,
+    where('date', '>=', startDate),
+    where('date', '<=', endDate),
+    orderBy('date', 'asc')
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as SchoolEvent));
+}
+
+export async function addSchoolEvent(event: Omit<SchoolEvent, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+  const eventsRef = collection(db, 'schoolEvents');
+  const docRef = await addDoc(eventsRef, {
+    ...event,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function updateSchoolEvent(
+  eventId: string, 
+  data: Partial<Omit<SchoolEvent, 'id' | 'createdAt' | 'createdBy'>>
+): Promise<void> {
+  const eventRef = doc(db, 'schoolEvents', eventId);
+  await updateDoc(eventRef, {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteSchoolEvent(eventId: string): Promise<void> {
+  const eventRef = doc(db, 'schoolEvents', eventId);
+  await deleteDoc(eventRef);
 }

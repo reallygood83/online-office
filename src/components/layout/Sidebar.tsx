@@ -16,6 +16,8 @@ export function Sidebar({ isAdmin }: SidebarProps) {
     { href: '/schedule/class', label: '학급별 시간표', icon: '🏫' },
     { href: '/teachers', label: '전담교사 관리', icon: '👥' },
     { href: '/classes', label: '학급/담임 관리', icon: '📚' },
+    { href: '/reservation', label: '특별실 예약', icon: '🏢' },
+    { href: '/calendar', label: '학사일정', icon: '📅' },
   ];
 
   const adminItems = [
@@ -23,6 +25,7 @@ export function Sidebar({ isAdmin }: SidebarProps) {
     { href: '/admin/users', label: '사용자 관리', icon: '👤' },
     { href: '/admin/settings', label: '시스템 설정', icon: '🔧' },
     { href: '/admin/admins', label: '관리자 지정', icon: '🛡️' },
+    { href: '/admin/rooms', label: '특별실 관리', icon: '🏢' },
   ];
 
   const isActive = (href: string) => {
