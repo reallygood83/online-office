@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { TeacherNamesProvider } from '@/lib/hooks/useTeacherNames';
 import { Header } from '@/components/layout/Header';
 
 export default function ProtectedLayout({
@@ -35,14 +36,16 @@ export default function ProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#FEFEFE]">
-      <Header
-        user={{ displayName: user.displayName, isAdmin: user.isAdmin }}
-        onLogout={logout}
-      />
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {children}
-      </main>
-    </div>
+    <TeacherNamesProvider>
+      <div className="min-h-screen bg-[#FEFEFE]">
+        <Header
+          user={{ displayName: user.displayName, isAdmin: user.isAdmin }}
+          onLogout={logout}
+        />
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          {children}
+        </main>
+      </div>
+    </TeacherNamesProvider>
   );
 }

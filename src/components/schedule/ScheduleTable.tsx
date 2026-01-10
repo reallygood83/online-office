@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { DAY_LABELS, DayOfWeek } from '@/types';
 import { SUBJECT_BG_COLORS, TEACHER_INFO, TEACHERS } from '@/data/scheduleData';
+import { useTeacherNames } from '@/lib/hooks/useTeacherNames';
 
 interface TeacherScheduleTableProps {
   teacherId: string;
@@ -14,6 +14,7 @@ export function TeacherScheduleTable({ teacherId, schedule }: TeacherScheduleTab
   const periods = [1, 2, 3, 4, 5];
   const teacherInfo = TEACHER_INFO[teacherId];
   const bgColor = teacherInfo ? SUBJECT_BG_COLORS[teacherInfo.subject] : 'bg-gray-200';
+  const { formatClassWithHomeTeacher } = useTeacherNames();
 
   return (
     <div className="overflow-x-auto">
@@ -22,7 +23,7 @@ export function TeacherScheduleTable({ teacherId, schedule }: TeacherScheduleTab
           <tr>
             <th className="w-16">교시</th>
             {days.map((day) => (
-              <th key={day} className="w-24">{DAY_LABELS[day]}</th>
+              <th key={day} className="w-32">{DAY_LABELS[day]}</th>
             ))}
           </tr>
         </thead>
@@ -39,7 +40,7 @@ export function TeacherScheduleTable({ teacherId, schedule }: TeacherScheduleTab
                       cell ? `${bgColor} hover:opacity-80` : 'bg-gray-50'
                     }`}
                   >
-                    {cell || '-'}
+                    {cell ? formatClassWithHomeTeacher(cell) : '-'}
                   </td>
                 );
               })}
@@ -59,6 +60,7 @@ interface ClassScheduleTableProps {
 export function ClassScheduleTable({ className, schedule }: ClassScheduleTableProps) {
   const days: DayOfWeek[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
   const periods = [1, 2, 3, 4, 5];
+  const { formatTeacherWithSubject } = useTeacherNames();
 
   return (
     <div className="overflow-x-auto">
@@ -67,7 +69,7 @@ export function ClassScheduleTable({ className, schedule }: ClassScheduleTablePr
           <tr>
             <th className="w-16">교시</th>
             {days.map((day) => (
-              <th key={day} className="w-28">{DAY_LABELS[day]}</th>
+              <th key={day} className="w-32">{DAY_LABELS[day]}</th>
             ))}
           </tr>
         </thead>
@@ -88,7 +90,9 @@ export function ClassScheduleTable({ className, schedule }: ClassScheduleTablePr
                     {cell ? (
                       <div>
                         <div className="font-bold">{cell.subject}</div>
-                        <div className="text-xs text-gray-600">({cell.teacher})</div>
+                        <div className="text-xs text-gray-600">
+                          ({formatTeacherWithSubject(cell.teacher, cell.subject)})
+                        </div>
                       </div>
                     ) : (
                       '-'
@@ -119,12 +123,20 @@ export function EditableClassScheduleTable({
 }: EditableClassScheduleTableProps) {
   const days: DayOfWeek[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
   const periods = [1, 2, 3, 4, 5];
+  const { formatTeacherWithSubject, teacherRealNames } = useTeacherNames();
 
-  const teacherOptions = TEACHERS.map((t) => ({
-    value: t,
-    label: `${TEACHER_INFO[t].subject} (${t})`,
-    subject: TEACHER_INFO[t].subject,
-  }));
+  const teacherOptions = TEACHERS.map((t) => {
+    const realName = teacherRealNames[t];
+    const info = TEACHER_INFO[t];
+    const label = realName 
+      ? `${realName}(${info.subject})`
+      : `${info.subject} (${t})`;
+    return {
+      value: t,
+      label,
+      subject: info.subject,
+    };
+  });
 
   const handleSelectChange = (day: DayOfWeek, periodIdx: number, teacherId: string) => {
     if (teacherId === '') {
@@ -207,7 +219,9 @@ export function EditableClassScheduleTable({
                     {cell ? (
                       <div>
                         <div className="font-bold">{cell.subject}</div>
-                        <div className="text-xs text-gray-600">({cell.teacher})</div>
+                        <div className="text-xs text-gray-600">
+                          ({formatTeacherWithSubject(cell.teacher, cell.subject)})
+                        </div>
                       </div>
                     ) : (
                       '-'
