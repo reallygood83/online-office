@@ -21,6 +21,8 @@ export function Header({ user, onLogout }: HeaderProps) {
     { href: '/schedule/class', label: '학급별 시간표' },
     { href: '/teachers', label: '전담교사 관리' },
     { href: '/classes', label: '학급 관리' },
+    { href: '/reservation', label: '특별실 예약' },
+    { href: '/calendar', label: '학사일정' },
   ];
 
   const isActive = (href: string) => pathname.startsWith(href);

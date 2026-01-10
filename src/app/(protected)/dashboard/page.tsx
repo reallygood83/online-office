@@ -23,6 +23,20 @@ export default function DashboardPage() {
       color: 'bg-[#4ECDC4]',
     },
     {
+      href: '/reservation',
+      icon: '🏢',
+      title: '특별실 예약',
+      description: '과학실, 컴퓨터실 등 예약',
+      color: 'bg-[#74B9FF]',
+    },
+    {
+      href: '/calendar',
+      icon: '📅',
+      title: '학사일정',
+      description: '학교 행사 및 일정 확인',
+      color: 'bg-[#FD79A8]',
+    },
+    {
       href: '/teachers',
       icon: '👥',
       title: '전담교사 관리',
@@ -73,7 +87,7 @@ export default function DashboardPage() {
 
       <div>
         <h2 className="text-2xl font-extrabold mb-4">빠른 메뉴</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {quickLinks.map((link) => (
             <Link key={link.href} href={link.href}>
               <Card className={`${link.color} hover:translate-y-[-4px] transition-all cursor-pointer h-full`}>
