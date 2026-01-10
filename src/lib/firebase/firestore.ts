@@ -28,6 +28,10 @@ import {
   ReservationPeriod,
   SchoolEvent,
   EventCategory,
+  Announcement,
+  AnnouncementCategory,
+  UserNotification,
+  NotificationType,
 } from '@/types';
 
 export async function getSchedules(semester: 1 | 2, type: 'teacher' | 'class'): Promise<Schedule[]> {
@@ -510,4 +514,132 @@ export async function updateSchoolEvent(
 export async function deleteSchoolEvent(eventId: string): Promise<void> {
   const eventRef = doc(db, 'schoolEvents', eventId);
   await deleteDoc(eventRef);
+}
+
+export async function getAnnouncements(limit?: number): Promise<Announcement[]> {
+  const announcementsRef = collection(db, 'announcements');
+  const q = query(announcementsRef, orderBy('createdAt', 'desc'));
+  const snapshot = await getDocs(q);
+  const announcements = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as Announcement));
+  return limit ? announcements.slice(0, limit) : announcements;
+}
+
+export async function getAnnouncementById(id: string): Promise<Announcement | null> {
+  const announcementRef = doc(db, 'announcements', id);
+  const snapshot = await getDoc(announcementRef);
+  if (snapshot.exists()) {
+    return { id: snapshot.id, ...snapshot.data() } as Announcement;
+  }
+  return null;
+}
+
+export async function createAnnouncement(
+  announcement: Omit<Announcement, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<string> {
+  const announcementsRef = collection(db, 'announcements');
+  const docRef = await addDoc(announcementsRef, {
+    ...announcement,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function updateAnnouncement(
+  id: string,
+  data: Partial<Omit<Announcement, 'id' | 'createdAt' | 'createdBy' | 'createdByName'>>
+): Promise<void> {
+  const announcementRef = doc(db, 'announcements', id);
+  await updateDoc(announcementRef, {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteAnnouncement(id: string): Promise<void> {
+  const announcementRef = doc(db, 'announcements', id);
+  await deleteDoc(announcementRef);
+}
+
+export async function getUserNotifications(userId: string, limitCount = 20): Promise<UserNotification[]> {
+  const notificationsRef = collection(db, 'notifications');
+  const q = query(
+    notificationsRef,
+    where('recipientId', '==', userId),
+    orderBy('createdAt', 'desc')
+  );
+  const snapshot = await getDocs(q);
+  const notifications = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() } as UserNotification));
+  return notifications.slice(0, limitCount);
+}
+
+export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  const notificationsRef = collection(db, 'notifications');
+  const q = query(
+    notificationsRef,
+    where('recipientId', '==', userId),
+    where('isRead', '==', false)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.size;
+}
+
+export async function createNotification(
+  notification: Omit<UserNotification, 'id' | 'createdAt'>
+): Promise<string> {
+  const notificationsRef = collection(db, 'notifications');
+  const docRef = await addDoc(notificationsRef, {
+    ...notification,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
+  const notificationRef = doc(db, 'notifications', notificationId);
+  await updateDoc(notificationRef, { isRead: true });
+}
+
+export async function markAllNotificationsAsRead(userId: string): Promise<void> {
+  const notificationsRef = collection(db, 'notifications');
+  const q = query(
+    notificationsRef,
+    where('recipientId', '==', userId),
+    where('isRead', '==', false)
+  );
+  const snapshot = await getDocs(q);
+  const batch = writeBatch(db);
+  snapshot.docs.forEach(docSnap => {
+    batch.update(docSnap.ref, { isRead: true });
+  });
+  await batch.commit();
+}
+
+export async function createNotificationsForAllUsers(
+  notification: Omit<UserNotification, 'id' | 'createdAt' | 'recipientId'>
+): Promise<void> {
+  const users = await getAllUsers();
+  const batch = writeBatch(db);
+  const notificationsRef = collection(db, 'notifications');
+  
+  users.forEach(user => {
+    const newDocRef = doc(notificationsRef);
+    batch.set(newDocRef, {
+      ...notification,
+      recipientId: user.uid,
+      createdAt: serverTimestamp(),
+    });
+  });
+  
+  await batch.commit();
+}
+
+export async function getAllUsersWithEmail(): Promise<Array<{ uid: string; email: string; displayName: string }>> {
+  const users = await getAllUsers();
+  return users
+    .filter(user => user.email)
+    .map(user => ({
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName || user.email,
+    }));
 }

@@ -39,7 +39,7 @@ export default function ProtectedLayout({
     <TeacherNamesProvider>
       <div className="min-h-screen bg-[#FEFEFE]">
         <Header
-          user={{ displayName: user.displayName, isAdmin: user.isAdmin }}
+          user={{ uid: user.uid, displayName: user.displayName, isAdmin: user.isAdmin }}
           onLogout={logout}
         />
         <main className="max-w-7xl mx-auto px-4 py-8">

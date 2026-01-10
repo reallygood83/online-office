@@ -198,3 +198,62 @@ export const EVENT_CATEGORY_COLORS: Record<EventCategory, string> = {
   holiday: 'bg-purple-300',
   other: 'bg-gray-300',
 };
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  category: AnnouncementCategory;
+  priority: 'normal' | 'important' | 'urgent';
+  sendEmail: boolean;
+  createdBy: string;
+  createdByName: string;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+export type AnnouncementCategory = 
+  | 'general'
+  | 'schedule'
+  | 'reservation'
+  | 'event'
+  | 'system';
+
+export const ANNOUNCEMENT_CATEGORY_LABELS: Record<AnnouncementCategory, string> = {
+  general: '일반 공지',
+  schedule: '시간표 관련',
+  reservation: '특별실 예약',
+  event: '학교 행사',
+  system: '시스템 안내',
+};
+
+export const ANNOUNCEMENT_PRIORITY_LABELS: Record<string, string> = {
+  normal: '일반',
+  important: '중요',
+  urgent: '긴급',
+};
+
+export const ANNOUNCEMENT_PRIORITY_COLORS: Record<string, string> = {
+  normal: 'bg-gray-200',
+  important: 'bg-yellow-300',
+  urgent: 'bg-red-400 text-white',
+};
+
+export interface UserNotification {
+  id: string;
+  recipientId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  link?: string;
+  isRead: boolean;
+  createdAt: Timestamp;
+  relatedId?: string;
+}
+
+export type NotificationType = 
+  | 'announcement'
+  | 'reservation_made'
+  | 'reservation_cancelled'
+  | 'calendar_event'
+  | 'system';

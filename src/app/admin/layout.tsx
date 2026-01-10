@@ -51,7 +51,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-[#FEFEFE]">
       <Header
-        user={{ displayName: user.displayName, isAdmin: user.isAdmin }}
+        user={{ uid: user.uid, displayName: user.displayName, isAdmin: user.isAdmin }}
         onLogout={logout}
       />
       <div className="flex">

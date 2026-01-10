@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui';
+import { NotificationBell } from './NotificationBell';
 
 interface HeaderProps {
   user?: {
+    uid: string;
     displayName: string;
     isAdmin: boolean;
   } | null;
@@ -74,6 +76,7 @@ export function Header({ user, onLogout }: HeaderProps) {
               </nav>
 
               <div className="flex items-center gap-3">
+                <NotificationBell userId={user.uid} />
                 <div className="neo-badge px-3 py-1 rounded-full bg-white">
                   {user.displayName}
                 </div>
