@@ -118,8 +118,8 @@ export default function AdminUsersPage() {
                 <tbody>
                   {users.map((user) => (
                     <tr key={user.uid}>
-                      <td className="font-bold">{user.displayName}</td>
-                      <td className="text-sm">{user.email}</td>
+                      <td className="font-bold">{user.displayName || '(이름 없음)'}</td>
+                      <td className="text-sm">{user.email || '(이메일 없음)'}</td>
                       <td>
                         {user.isAdmin ? (
                           <span className="neo-badge bg-[#FF6B6B] text-white px-2 py-1 rounded">

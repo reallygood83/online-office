@@ -24,7 +24,10 @@ export default function AdminVerifyPage() {
       const isValid = await verifyAdminCode(code.trim());
       
       if (isValid) {
-        await setUserAsAdmin(user.uid);
+        await setUserAsAdmin(user.uid, {
+          email: user.email,
+          displayName: user.displayName,
+        });
         await refreshUser();
         router.push('/admin');
       } else {

@@ -41,16 +41,31 @@ export async function signUp(
 
 export async function signIn(email: string, password: string): Promise<FirebaseUser> {
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
   
   try {
-    await updateDoc(doc(db, 'users', userCredential.user.uid), {
-      lastLoginAt: serverTimestamp(),
-    });
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists() || !userSnap.data().email) {
+      await setDoc(userRef, {
+        email: user.email,
+        displayName: user.displayName || '사용자',
+        role: 'teacher',
+        isAdmin: userSnap.exists() ? userSnap.data().isAdmin || false : false,
+        createdAt: serverTimestamp(),
+        lastLoginAt: serverTimestamp(),
+      }, { merge: true });
+    } else {
+      await setDoc(userRef, {
+        lastLoginAt: serverTimestamp(),
+      }, { merge: true });
+    }
   } catch (error) {
-    console.log('Firestore not available, skipping lastLogin update');
+    console.error('Failed to update user document:', error);
   }
 
-  return userCredential.user;
+  return user;
 }
 
 export async function signOut(): Promise<void> {

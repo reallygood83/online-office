@@ -118,8 +118,8 @@ export default function AdminAdminsPage() {
                   className="flex items-center justify-between p-4 bg-[#FF6B6B]/10 rounded-xl border-3 border-[#FF6B6B]"
                 >
                   <div>
-                    <div className="font-bold">{admin.displayName}</div>
-                    <div className="text-sm text-gray-600">{admin.email}</div>
+                    <div className="font-bold">{admin.displayName || '(이름 없음)'}</div>
+                    <div className="text-sm text-gray-600">{admin.email || '(이메일 없음)'}</div>
                   </div>
                   <Button
                     onClick={() => handleRemoveAdmin(admin)}
@@ -158,8 +158,8 @@ export default function AdminAdminsPage() {
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border-3 border-gray-200"
                 >
                   <div>
-                    <div className="font-bold">{user.displayName}</div>
-                    <div className="text-sm text-gray-600">{user.email}</div>
+                    <div className="font-bold">{user.displayName || '(이름 없음)'}</div>
+                    <div className="text-sm text-gray-600">{user.email || '(이메일 없음)'}</div>
                   </div>
                   <Button
                     onClick={() => handleAddAdmin(user)}

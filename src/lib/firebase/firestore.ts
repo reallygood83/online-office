@@ -353,13 +353,21 @@ export async function updateAdminCode(newCode: string): Promise<void> {
   }, { merge: true });
 }
 
-export async function setUserAsAdmin(uid: string): Promise<void> {
+export async function setUserAsAdmin(uid: string, userInfo?: { email: string; displayName: string }): Promise<void> {
   const userRef = doc(db, 'users', uid);
-  await setDoc(userRef, {
+  const userData: Record<string, any> = {
     isAdmin: true,
     role: 'admin',
     updatedAt: serverTimestamp(),
-  }, { merge: true });
+  };
+  
+  if (userInfo) {
+    userData.email = userInfo.email;
+    userData.displayName = userInfo.displayName;
+    userData.createdAt = serverTimestamp();
+  }
+  
+  await setDoc(userRef, userData, { merge: true });
   
   const settingsRef = doc(db, 'settings', 'main');
   await setDoc(settingsRef, {
