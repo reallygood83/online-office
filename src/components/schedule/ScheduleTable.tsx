@@ -150,18 +150,37 @@ export function EditableClassScheduleTable({
   const periods = [1, 2, 3, 4, 5, 6];
   const { formatTeacherWithSubject, teacherRealNames } = useTeacherNames();
 
-  const teacherOptions = TEACHERS.map((t) => {
+  const teacherOptions = TEACHERS.flatMap((t) => {
     const realName = teacherRealNames[t];
     const info = TEACHER_INFO[t];
+    
+    // Main subject option
     const label = realName 
       ? `${realName}(${info.subject})`
       : `${info.subject} (${t})`;
-    return {
-      value: `teacher:${t}`,
+      
+    const options = [{
+      value: `teacher:${t}:${info.subject}`,
       label,
       subject: info.subject,
       type: 'teacher' as const,
-    };
+    }];
+
+    // Additional subjects options
+    if (info.additionalSubjects) {
+      info.additionalSubjects.forEach(subj => {
+        options.push({
+          value: `teacher:${t}:${subj}`,
+          label: realName 
+            ? `${realName}(${subj})` 
+            : `${subj} (${t})`,
+          subject: subj,
+          type: 'teacher' as const,
+        });
+      });
+    }
+    
+    return options;
   });
 
   const subjectOnlyOptions = ALL_SUBJECTS
@@ -173,23 +192,36 @@ export function EditableClassScheduleTable({
       type: 'subject' as const,
     }));
 
-  const allOptions = [...teacherOptions, ...subjectOnlyOptions];
-
   const handleSelectChange = (day: DayOfWeek, periodIdx: number, value: string) => {
     if (value === '') {
       onCellChange(day, periodIdx, null);
       return;
     }
 
-    const [type, id] = value.split(':');
+    if (value === 'custom:input') {
+      const input = window.prompt('수업 내용이나 과목을 입력하세요:');
+      if (input && input.trim()) {
+        onCellChange(day, periodIdx, {
+          subject: input.trim(),
+          teacher: '',
+        });
+      }
+      return;
+    }
+
+    const parts = value.split(':');
+    const type = parts[0];
     
     if (type === 'teacher') {
-      const info = TEACHER_INFO[id];
+      const [, id, subj] = parts;
+      // Use parsed subject if available, otherwise fallback to main subject
+      const subject = subj || TEACHER_INFO[id].subject;
       onCellChange(day, periodIdx, {
-        subject: info.subject,
+        subject: subject,
         teacher: id,
       });
     } else if (type === 'subject') {
+      const [, id] = parts;
       onCellChange(day, periodIdx, {
         subject: id,
         teacher: '',
@@ -199,8 +231,14 @@ export function EditableClassScheduleTable({
 
   const getCellValue = (cell: { subject: string; teacher: string } | null): string => {
     if (!cell) return '';
-    if (cell.teacher) return `teacher:${cell.teacher}`;
-    return `subject:${cell.subject}`;
+    if (cell.teacher) return `teacher:${cell.teacher}:${cell.subject}`;
+    
+    // Check if it's a standard subject option
+    const isStandardSubject = subjectOnlyOptions.some(opt => opt.value === `subject:${cell.subject}`);
+    if (isStandardSubject) return `subject:${cell.subject}`;
+    
+    // Otherwise it's a custom value
+    return `custom:${cell.subject}`;
   };
 
   return (
@@ -231,6 +269,14 @@ export function EditableClassScheduleTable({
                         onChange={(e) => handleSelectChange(day, idx, e.target.value)}
                       >
                         <option value="">선택...</option>
+                        
+                        {/* Show custom value if it exists and isn't a standard option */}
+                        {cell && !cell.teacher && !subjectOnlyOptions.some(o => o.subject === cell.subject) && (
+                          <option value={`custom:${cell.subject}`}>
+                            ✏️ {cell.subject}
+                          </option>
+                        )}
+
                         <optgroup label="📚 전담교사 수업">
                           {teacherOptions.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -245,6 +291,7 @@ export function EditableClassScheduleTable({
                             </option>
                           ))}
                         </optgroup>
+                        <option value="custom:input">✏️ 직접 입력...</option>
                       </select>
                     </td>
                   );
