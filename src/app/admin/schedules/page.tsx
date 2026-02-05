@@ -15,8 +15,7 @@ import {
   DEFAULT_SCHEDULES,
 } from '@/types';
 import { detectConflicts, hasConflicts, getConflictCount } from '@/services/conflictDetector';
-import { getSchedules } from '@/lib/firebase/firestore';
-import { saveTeacherSchedule } from '@/lib/firebase/scheduleService';
+import { saveTeacherSchedule, getTeacherScheduleFromDB } from '@/lib/firebase/scheduleService';
 import { TeacherScheduleData } from '@/data/scheduleData';
 import ScheduleGrid from '@/components/admin/ScheduleGrid';
 import TeacherSelector from '@/components/admin/TeacherSelector';
@@ -37,7 +36,42 @@ export default function SchedulesPage() {
   const loadSchedules = useCallback(async () => {
     setLoadingState('loading');
     try {
-      const schedules = await getSchedules('all', 'teacher');
+      const schedules: Schedule[] = [];
+      
+      for (const teacher of SPECIAL_TEACHERS) {
+        const data = await getTeacherScheduleFromDB(teacher.id, 1);
+        if (data) {
+          // Convert TeacherScheduleData to Timetable
+          const timetable = createEmptyTimetable();
+          const subject = getTeacherSubject(teacher.id);
+          
+          const days: Day[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
+          days.forEach(day => {
+            data[day].forEach((cell, idx) => {
+              const period = (idx + 1) as Period;
+              if (cell) {
+                if (typeof cell === 'string') {
+                  timetable[day][period] = { subject, className: cell, teacherId: teacher.id };
+                } else {
+                  timetable[day][period] = { subject: cell.subject, className: cell.className, teacherId: teacher.id };
+                }
+              }
+            });
+          });
+
+          schedules.push({
+            id: `${teacher.id}_S1`,
+            targetId: teacher.id,
+            type: 'teacher',
+            semester: 1,
+            year: new Date().getFullYear(),
+            timetable,
+            updatedAt: new Date(),
+            updatedBy: 'system'
+          });
+        }
+      }
+      
       setAllSchedules(schedules);
       
       const counts: { [teacherId: string]: number } = {};
