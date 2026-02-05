@@ -16,6 +16,8 @@ import {
 } from '@/types';
 import { detectConflicts, hasConflicts, getConflictCount } from '@/services/conflictDetector';
 import { getSchedules } from '@/lib/firebase/firestore';
+import { saveTeacherSchedule } from '@/lib/firebase/scheduleService';
+import { TeacherScheduleData } from '@/data/scheduleData';
 import ScheduleGrid from '@/components/admin/ScheduleGrid';
 import TeacherSelector from '@/components/admin/TeacherSelector';
 import ConflictPanel from '@/components/admin/ConflictPanel';
@@ -109,12 +111,29 @@ export default function SchedulesPage() {
     setLoadingState('saving');
     
     try {
-      const { saveTeacherSchedule } = await import('@/services/scheduleService');
+      // Convert Timetable to TeacherScheduleData for the new service
+      const scheduleData: TeacherScheduleData = {
+        mon: [], tue: [], wed: [], thu: [], fri: []
+      };
+      
+      const days: Day[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
+      days.forEach(day => {
+        // Ensure array is initialized
+        scheduleData[day] = [];
+        for (let i = 1; i <= 6; i++) {
+          const cell = currentTimetable[day][i as Period];
+          if (cell && cell.className) {
+            scheduleData[day].push({ subject: cell.subject, className: cell.className });
+          } else {
+            scheduleData[day].push(null);
+          }
+        }
+      });
+
       await saveTeacherSchedule(
         selectedTeacherId,
-        currentTimetable,
         1,
-        new Date().getFullYear(),
+        scheduleData,
         'admin'
       );
       
