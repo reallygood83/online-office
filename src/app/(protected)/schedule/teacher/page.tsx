@@ -6,6 +6,7 @@ import { TeacherScheduleTable, EditableTeacherScheduleTable } from '@/components
 import { SemesterSelector } from '@/components/schedule/SemesterSelector';
 import { useTeacherNames } from '@/lib/hooks/useTeacherNames';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { saveTeacherSchedule, getTeacherScheduleFromDB } from '@/lib/firebase/scheduleService';
 import { DayOfWeek, DEFAULT_SCHEDULES } from '@/types';
 import {
   TEACHERS,
@@ -14,6 +15,7 @@ import {
   TEACHER_SCHEDULES_SEMESTER2,
   SUBJECT_BG_COLORS,
   TeacherScheduleData,
+  TeacherScheduleCell,
 } from '@/data/scheduleData';
 
 export default function TeacherSchedulePage() {
@@ -21,16 +23,30 @@ export default function TeacherSchedulePage() {
   const [selectedTeacher, setSelectedTeacher] = useState<string>(TEACHERS[0]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedSchedules, setEditedSchedules] = useState<Record<string, TeacherScheduleData>>({});
+  const [loadedSchedules, setLoadedSchedules] = useState<Record<string, TeacherScheduleData>>({});
+  const [isSaving, setIsSaving] = useState(false);
   const { teacherRealNames, formatTeacherWithSubject } = useTeacherNames();
   const { user } = useAuth();
 
-  const baseScheduleData = semester === 1 ? TEACHER_SCHEDULES_SEMESTER1 : TEACHER_SCHEDULES_SEMESTER2;
-  const scheduleData = { ...baseScheduleData, ...editedSchedules };
-  const teacherInfo = TEACHER_INFO[selectedTeacher];
-
   useEffect(() => {
+    const loadAllSchedules = async () => {
+      const schedules: Record<string, TeacherScheduleData> = {};
+      for (const teacherId of TEACHERS) {
+        const data = await getTeacherScheduleFromDB(teacherId, semester);
+        if (data) schedules[teacherId] = data;
+      }
+      setLoadedSchedules(schedules);
+    };
+    loadAllSchedules();
     setEditedSchedules({});
   }, [semester]);
+
+  const baseScheduleData = semester === 1 ? TEACHER_SCHEDULES_SEMESTER1 : TEACHER_SCHEDULES_SEMESTER2;
+  // Merge: loaded overrides static, edited overrides loaded
+  const currentSchedules = { ...baseScheduleData, ...loadedSchedules };
+  const displaySchedules = { ...currentSchedules, ...editedSchedules };
+  
+  const teacherInfo = TEACHER_INFO[selectedTeacher];
 
   const getTeacherDisplayName = (teacherId: string) => {
     const realName = teacherRealNames[teacherId];
@@ -43,9 +59,9 @@ export default function TeacherSchedulePage() {
     label: getTeacherDisplayName(t),
   }));
 
-  const handleCellChange = (day: DayOfWeek, periodIdx: number, value: string | null) => {
+  const handleCellChange = (day: DayOfWeek, periodIdx: number, value: TeacherScheduleCell) => {
     setEditedSchedules((prev) => {
-      const currentSchedule = prev[selectedTeacher] || { ...baseScheduleData[selectedTeacher] };
+      const currentSchedule = prev[selectedTeacher] || { ...currentSchedules[selectedTeacher] };
       const newDaySchedule = [...currentSchedule[day]];
       newDaySchedule[periodIdx] = value;
       return {
@@ -59,7 +75,23 @@ export default function TeacherSchedulePage() {
   };
 
   const handleSave = async () => {
-    setIsEditMode(false);
+    setIsSaving(true);
+    try {
+      const promises = Object.entries(editedSchedules).map(([teacherId, schedule]) => 
+        saveTeacherSchedule(teacherId, semester, schedule, user?.uid)
+      );
+      await Promise.all(promises);
+      
+      setLoadedSchedules(prev => ({ ...prev, ...editedSchedules }));
+      setEditedSchedules({});
+      setIsEditMode(false);
+      alert('저장되었습니다.');
+    } catch (error) {
+      console.error(error);
+      alert('저장 실패');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -141,9 +173,10 @@ export default function TeacherSchedulePage() {
                     </button>
                     <button
                       onClick={handleSave}
-                      className="neo-button px-4 py-2 bg-neo-lime-300 border-2 border-black rounded-lg font-bold shadow-neo-sm hover:shadow-neo-pressed hover:translate-x-0.5 hover:translate-y-0.5 transition-all"
+                      disabled={isSaving}
+                      className="neo-button px-4 py-2 bg-neo-lime-300 border-2 border-black rounded-lg font-bold shadow-neo-sm hover:shadow-neo-pressed hover:translate-x-0.5 hover:translate-y-0.5 transition-all disabled:opacity-50"
                     >
-                      저장
+                      {isSaving ? '저장 중...' : '저장'}
                     </button>
                   </>
                 ) : (
@@ -165,14 +198,14 @@ export default function TeacherSchedulePage() {
           {isEditMode ? (
             <EditableTeacherScheduleTable
               teacherId={selectedTeacher}
-              schedule={scheduleData[selectedTeacher]}
+              schedule={displaySchedules[selectedTeacher]}
               isEditMode={isEditMode}
               onCellChange={handleCellChange}
             />
           ) : (
             <TeacherScheduleTable
               teacherId={selectedTeacher}
-              schedule={scheduleData[selectedTeacher]}
+              schedule={displaySchedules[selectedTeacher]}
             />
           )}
         </CardContent>

@@ -1,7 +1,9 @@
-import { DayOfWeek } from '@/types';
+import { DayOfWeek, TeacherInfoData } from '@/types';
+
+export type TeacherScheduleCell = string | { subject: string; className: string } | null;
 
 export type TeacherScheduleData = {
-  [day in DayOfWeek]: (string | null)[];
+  [day in DayOfWeek]: TeacherScheduleCell[];
 };
 
 export type ClassScheduleData = {
@@ -140,7 +142,7 @@ export const TEACHER_SCHEDULES_SEMESTER2: Record<string, TeacherScheduleData> = 
   },
 };
 
-export const TEACHER_INFO: Record<string, { subject: string; weeklyHours: number; targetGrades: string }> = {
+export const TEACHER_INFO: Record<string, TeacherInfoData> = {
   '영어1': { subject: '영어', weeklyHours: 20, targetGrades: '5학년, 3-6반' },
   '영전강': { subject: '영어', weeklyHours: 20, targetGrades: '6학년, 4-6반' },
   '영어2': { subject: '영어', weeklyHours: 20, targetGrades: '3-4학년' },
@@ -148,8 +150,8 @@ export const TEACHER_INFO: Record<string, { subject: string; weeklyHours: number
   '체육2': { subject: '체육', weeklyHours: 22, targetGrades: '4-5학년' },
   '체육3': { subject: '체육', weeklyHours: 22, targetGrades: '2학년, 6학년' },
   '음악': { subject: '음악', weeklyHours: 18, targetGrades: '5-6학년' },
-  '도덕1': { subject: '도덕', weeklyHours: 16, targetGrades: '1, 3, 5학년' },
-  '도덕2': { subject: '도덕', weeklyHours: 16, targetGrades: '2, 4, 6학년' },
+  '도덕1': { subject: '도덕', weeklyHours: 16, targetGrades: '1, 3, 5학년', additionalSubjects: ['체육'] },
+  '도덕2': { subject: '도덕', weeklyHours: 16, targetGrades: '2, 4, 6학년', additionalSubjects: ['체육'] },
 };
 
 export const ALL_SUBJECTS = [

@@ -4,6 +4,7 @@ import {
   getDoc,
   writeBatch,
   serverTimestamp,
+  runTransaction,
 } from 'firebase/firestore';
 import { db } from './config';
 import { DayOfWeek } from '@/types';
@@ -15,6 +16,7 @@ import {
   TEACHERS,
   TeacherScheduleData,
   ClassScheduleData,
+  TeacherScheduleCell,
 } from '@/data/scheduleData';
 
 export interface ClassScheduleDoc {
@@ -35,6 +37,126 @@ export interface TeacherScheduleDoc {
     targetGrades: string;
   };
   updatedAt: any;
+}
+
+export async function saveTeacherSchedule(
+  teacherId: string,
+  semester: 1 | 2,
+  schedule: TeacherScheduleData,
+  userId?: string
+): Promise<void> {
+  const teacherRef = doc(db, 'teacherSchedules', `${teacherId}_S${semester}`);
+  
+  // Get old schedule for diffing (to handle removed classes)
+  const oldDoc = await getDoc(teacherRef);
+  const oldSchedule = oldDoc.exists() ? (oldDoc.data().schedule as TeacherScheduleData) : null;
+
+  // 1. Save teacher schedule
+  await setDoc(teacherRef, {
+    teacherId,
+    semester,
+    schedule,
+    info: TEACHER_INFO[teacherId],
+    updatedAt: serverTimestamp(),
+    updatedBy: userId || 'anonymous',
+  });
+
+  // 2. Sync to class schedules
+  await syncTeacherToClassSchedules(teacherId, semester, schedule, oldSchedule, userId);
+}
+
+async function syncTeacherToClassSchedules(
+  teacherId: string,
+  semester: 1 | 2,
+  newSchedule: TeacherScheduleData,
+  oldSchedule: TeacherScheduleData | null,
+  userId?: string
+) {
+  const days: DayOfWeek[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
+  const affectedClasses = new Set<string>();
+  
+  // Helper to get class name from cell
+  const getClassName = (cell: TeacherScheduleCell): string | null => {
+    if (!cell) return null;
+    return typeof cell === 'string' ? cell : cell.className;
+  };
+
+  // Helper to get subject from cell
+  const getSubject = (cell: TeacherScheduleCell): string => {
+    if (typeof cell === 'object' && cell?.subject) return cell.subject;
+    return TEACHER_INFO[teacherId].subject;
+  };
+
+  // 1. Identify all affected classes (both added and removed)
+  days.forEach(day => {
+    // Check new schedule
+    newSchedule[day].forEach(cell => {
+      const cls = getClassName(cell);
+      if (cls) affectedClasses.add(cls);
+    });
+    
+    // Check old schedule
+    if (oldSchedule) {
+      oldSchedule[day].forEach(cell => {
+        const cls = getClassName(cell);
+        if (cls) affectedClasses.add(cls);
+      });
+    }
+  });
+
+  if (affectedClasses.size === 0) return;
+
+  // 2. Update each affected class schedule
+  // We use runTransaction to ensure consistency, but since we're updating multiple docs,
+  // we might hit limits. For now, we'll process them in parallel with individual transactions 
+  // or just read-modify-write pattern since conflict risk is low.
+  // Using read-modify-write for simplicity and batching.
+
+  const batch = writeBatch(db);
+  const promises = Array.from(affectedClasses).map(async (classId) => {
+    const classRef = doc(db, 'classSchedules', `${classId}_S${semester}`);
+    const classSnap = await getDoc(classRef);
+    
+    let classSchedule: ClassScheduleData;
+    
+    if (classSnap.exists()) {
+      classSchedule = classSnap.data().schedule as ClassScheduleData;
+    } else {
+      classSchedule = computeClassScheduleFromTeachers(classId, semester);
+    }
+
+    let hasChanges = false;
+
+    days.forEach(day => {
+      for (let i = 0; i < 6; i++) {
+        const newCell = newSchedule[day][i];
+        const newClass = getClassName(newCell);
+        
+        if (newClass === classId) {
+          const subject = getSubject(newCell);
+          classSchedule[day][i] = { subject, teacher: teacherId };
+          hasChanges = true;
+        } else if (classSchedule[day][i]?.teacher === teacherId) {
+          // If this slot was previously taught by this teacher but class changed, clear it
+          classSchedule[day][i] = null;
+          hasChanges = true;
+        }
+      }
+    });
+
+    if (hasChanges) {
+      batch.set(classRef, {
+        classId,
+        semester,
+        schedule: classSchedule,
+        updatedAt: serverTimestamp(),
+        updatedBy: 'system-sync',
+      }, { merge: true });
+    }
+  });
+
+  await Promise.all(promises);
+  await batch.commit();
 }
 
 export async function getClassScheduleFromDB(
