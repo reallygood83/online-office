@@ -296,25 +296,7 @@ export default function ClassSchedulePage() {
             </CardContent>
           </Card>
 
-          <Card className="mt-4 bg-[#4ECDC4]/10">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-4xl mb-2">📚</div>
-                <div className="text-sm text-gray-600">
-                  {semester === 1 ? '1학기' : '2학기'} 도덕 수업 대상
-                </div>
-                <div className="font-bold mt-1">
-                  {semester === 1 ? '2, 4, 6학년' : '1, 3, 5학년'}
-                </div>
-                {((semester === 1 && [2, 4, 6].includes(classGrade)) ||
-                  (semester === 2 && [1, 3, 5].includes(classGrade))) && (
-                  <div className="neo-badge bg-[#A29BFE] px-2 py-1 rounded mt-2 inline-block">
-                    도덕 수업 대상 학년
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
       </div>
     </div>

@@ -24,7 +24,7 @@ export function detectConflicts(
       id: `temp-${currentTeacherId}`,
       type: 'teacher',
       targetId: currentTeacherId,
-      semester: 'year',
+      semester: 1,
       year: new Date().getFullYear(),
       timetable: proposedTimetable,
       updatedAt: new Date(),

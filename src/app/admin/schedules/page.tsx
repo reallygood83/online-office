@@ -113,7 +113,7 @@ export default function SchedulesPage() {
       await saveTeacherSchedule(
         selectedTeacherId,
         currentTimetable,
-        'year',
+        1,
         new Date().getFullYear(),
         'admin'
       );

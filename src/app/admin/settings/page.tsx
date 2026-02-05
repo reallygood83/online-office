@@ -317,25 +317,27 @@ export default function AdminSettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>📝 도덕 수업 대상 안내</CardTitle>
+          <CardTitle>📝 도덕 전담 배정 안내</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-4 bg-[#FFE135]/20 rounded-xl border-3 border-[#FFE135]">
-              <h3 className="font-bold text-lg mb-2">1학기 도덕 대상</h3>
-              <div className="flex gap-2">
-                <span className="neo-badge bg-white px-3 py-1 rounded-full">2학년</span>
-                <span className="neo-badge bg-white px-3 py-1 rounded-full">4학년</span>
-                <span className="neo-badge bg-white px-3 py-1 rounded-full">6학년</span>
-              </div>
-            </div>
-            <div className="p-4 bg-[#4ECDC4]/20 rounded-xl border-3 border-[#4ECDC4]">
-              <h3 className="font-bold text-lg mb-2">2학기 도덕 대상</h3>
+            <div className="p-4 bg-[#A29BFE]/20 rounded-xl border-3 border-[#A29BFE]">
+              <h3 className="font-bold text-lg mb-2">도덕1 담당</h3>
               <div className="flex gap-2">
                 <span className="neo-badge bg-white px-3 py-1 rounded-full">1학년</span>
                 <span className="neo-badge bg-white px-3 py-1 rounded-full">3학년</span>
                 <span className="neo-badge bg-white px-3 py-1 rounded-full">5학년</span>
               </div>
+              <p className="text-sm text-gray-500 mt-2">주 16시간 (학급당 1시간)</p>
+            </div>
+            <div className="p-4 bg-[#74B9FF]/20 rounded-xl border-3 border-[#74B9FF]">
+              <h3 className="font-bold text-lg mb-2">도덕2 담당</h3>
+              <div className="flex gap-2">
+                <span className="neo-badge bg-white px-3 py-1 rounded-full">2학년</span>
+                <span className="neo-badge bg-white px-3 py-1 rounded-full">4학년</span>
+                <span className="neo-badge bg-white px-3 py-1 rounded-full">6학년</span>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">주 16시간 (학급당 1시간)</p>
             </div>
           </div>
         </CardContent>

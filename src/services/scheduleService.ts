@@ -4,7 +4,7 @@ import { getSchedules, createSchedule, updateSchedule } from '@/lib/firebase/fir
 
 export async function getClassSchedule(
   className: string,
-  semester: 1 | 2 | 'year',
+  semester: 1 | 2,
   year: number
 ): Promise<Timetable> {
   const teacherSchedules = await getSchedules(semester, 'teacher');
@@ -43,7 +43,7 @@ function buildClassTimetable(className: string, teacherSchedules: Schedule[]): T
 }
 
 export async function getAllClassSchedules(
-  semester: 1 | 2 | 'year',
+  semester: 1 | 2,
   year: number
 ): Promise<Map<string, Timetable>> {
   const teacherSchedules = await getSchedules(semester, 'teacher');
@@ -72,7 +72,7 @@ export async function getAllClassSchedules(
 export async function saveTeacherSchedule(
   teacherId: string,
   timetable: Timetable,
-  semester: 1 | 2 | 'year',
+  semester: 1 | 2,
   year: number,
   userId: string
 ): Promise<string> {

@@ -16,8 +16,6 @@ export interface Class {
   classNumber: number;           // 1~6
   homeTeacherName: string;       // Homeroom teacher name
   homeTeacherId?: string;        // Homeroom teacher user uid (optional)
-  semester1Hours: number;        // 1st semester total hours
-  semester2Hours: number;        // 2nd semester total hours
 }
 
 // Special Teacher Types
@@ -50,7 +48,7 @@ export interface Timetable {
 
 export interface Schedule {
   id: string;
-  semester: 1 | 2 | 'year';
+  semester: 1 | 2;
   year: number;
   type: 'teacher' | 'class';
   targetId: string;              // Teacher ID or Class ID
@@ -127,16 +125,6 @@ export const getTeacherTargetClasses = (teacherId: string): string[] => {
   const teacher = SPECIAL_TEACHERS.find(t => t.id === teacherId);
   if (!teacher) return [];
   return getClassesByGrades(teacher.targetGrades);
-};
-
-export const YEAR_ROUND_TEACHER_IDS = ['도덕1', '도덕2'] as const;
-
-export const isYearRoundTeacher = (teacherId: string): boolean => {
-  return YEAR_ROUND_TEACHER_IDS.includes(teacherId as typeof YEAR_ROUND_TEACHER_IDS[number]);
-};
-
-export const getTeacherSemesterType = (teacherId: string): 'year' | null => {
-  return isYearRoundTeacher(teacherId) ? 'year' : null;
 };
 
 export interface Conflict {

@@ -20,17 +20,13 @@ import type { Schedule, Class, SpecialTeacher, Settings, Announcement, SchoolEve
 // ========== SCHEDULES ==========
 
 export const getSchedules = async (
-  semester: 1 | 2 | 'year' | 'all',
+  semester: 1 | 2 | 'all',
   type?: 'teacher' | 'class'
 ) => {
   let q = query(collection(db, 'schedules'));
 
   if (semester !== 'all') {
-    if (semester === 'year') {
-      q = query(q, where('semester', '==', 'year'));
-    } else {
-      q = query(q, where('semester', 'in', [semester, 'year']));
-    }
+    q = query(q, where('semester', '==', semester));
   }
 
   if (type) {
@@ -78,11 +74,6 @@ export const getTeacherSchedule = async (
 ) => {
   const schedules = await getSchedules(semester, 'teacher');
   return schedules.find(s => s.targetId === teacherId && s.year === year) || null;
-};
-
-export const hasYearRoundSchedule = async (teacherId: string, year: number) => {
-  const schedules = await getSchedules('year', 'teacher');
-  return schedules.some(s => s.targetId === teacherId && s.year === year);
 };
 
 // ========== CLASSES ==========

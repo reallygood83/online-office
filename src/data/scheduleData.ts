@@ -58,7 +58,14 @@ export const TEACHER_SCHEDULES_SEMESTER1: Record<string, TeacherScheduleData> = 
     thu: ['5-3', '6-4', '5-1', '5-2', null],
     fri: ['6-2', null, '6-5', '5-2', null],
   },
-  '도덕': {
+  '도덕1': {
+    mon: [null, '1-2', '1-3', '1-4', null],
+    tue: ['3-1', null, '3-3', '5-1', '5-2'],
+    wed: [null, '3-4', '3-6', '3-5', null],
+    thu: ['5-3', '5-4', '5-5', '3-2', null],
+    fri: ['5-6', '1-1', null, null, null],
+  },
+  '도덕2': {
     mon: ['2-1', '2-2', '2-3', '2-4', null],
     tue: ['6-1', '6-2', '6-3', null, null],
     wed: ['6-4', '6-5', '6-6', null, null],
@@ -117,12 +124,19 @@ export const TEACHER_SCHEDULES_SEMESTER2: Record<string, TeacherScheduleData> = 
     thu: ['5-2', '5-3', '5-1', null, null],
     fri: ['6-2', null, '6-5', '5-2', null],
   },
-  '도덕': {
+  '도덕1': {
     mon: [null, '1-2', '1-3', '1-4', null],
     tue: ['3-1', null, '3-3', '5-1', '5-2'],
     wed: [null, '3-4', '3-6', '3-5', null],
     thu: ['5-3', '5-4', '5-5', '3-2', null],
     fri: ['5-6', '1-1', null, null, null],
+  },
+  '도덕2': {
+    mon: ['2-1', '2-2', '2-3', '2-4', null],
+    tue: ['6-1', '6-2', '6-3', null, null],
+    wed: ['6-4', '6-5', '6-6', null, null],
+    thu: [null, '4-1', '4-2', '4-3', null],
+    fri: ['4-4', '4-5', '4-6', null, null],
   },
 };
 
@@ -134,7 +148,8 @@ export const TEACHER_INFO: Record<string, { subject: string; weeklyHours: number
   '체육2': { subject: '체육', weeklyHours: 22, targetGrades: '4-5학년' },
   '체육3': { subject: '체육', weeklyHours: 22, targetGrades: '2학년, 6학년' },
   '음악': { subject: '음악', weeklyHours: 18, targetGrades: '5-6학년' },
-  '도덕': { subject: '도덕', weeklyHours: 16, targetGrades: '학기별 상이' },
+  '도덕1': { subject: '도덕', weeklyHours: 16, targetGrades: '1, 3, 5학년' },
+  '도덕2': { subject: '도덕', weeklyHours: 16, targetGrades: '2, 4, 6학년' },
 };
 
 export const ALL_SUBJECTS = [
@@ -168,7 +183,7 @@ export const ALL_CLASSES = [
   '6-1', '6-2', '6-3', '6-4', '6-5', '6-6',
 ];
 
-export const TEACHERS = ['영어1', '영전강', '영어2', '체육1', '체육2', '체육3', '음악', '도덕'];
+export const TEACHERS = ['영어1', '영전강', '영어2', '체육1', '체육2', '체육3', '음악', '도덕1', '도덕2'];
 
 export function getClassSchedule(
   className: string,
