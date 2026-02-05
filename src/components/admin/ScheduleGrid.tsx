@@ -20,6 +20,7 @@ interface ScheduleGridProps {
   conflictMap: ConflictMap;
   onCellChange: (day: Day, period: Period, className: string | null) => void;
   disabled?: boolean;
+  additionalSubjects?: string[];
 }
 
 const PERIOD_LABELS = ['1교시', '2교시', '3교시', '4교시', '5교시'];
@@ -31,6 +32,7 @@ export default function ScheduleGrid({
   conflictMap,
   onCellChange,
   disabled = false,
+  additionalSubjects = [],
 }: ScheduleGridProps) {
   const getConflictKey = (day: Day, period: Period) => `${day}-${period}`;
   
@@ -86,6 +88,7 @@ export default function ScheduleGrid({
                       hasConflict={hasConflict}
                       onChange={(className) => handleCellChange(day, period, className)}
                       disabled={disabled}
+                      additionalSubjects={additionalSubjects}
                     />
                   </td>
                 );

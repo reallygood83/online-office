@@ -13,10 +13,11 @@ import {
   getTeacherSubject,
   createEmptyTimetable,
   DEFAULT_SCHEDULES,
+  TeacherInfoData,
 } from '@/types';
 import { detectConflicts, hasConflicts, getConflictCount } from '@/services/conflictDetector';
-import { saveTeacherSchedule, getTeacherScheduleFromDB } from '@/lib/firebase/scheduleService';
-import { TeacherScheduleData } from '@/data/scheduleData';
+import { saveTeacherSchedule, getTeacherScheduleFromDB, getTeacherDocFromDB } from '@/lib/firebase/scheduleService';
+import { TeacherScheduleData, TEACHER_INFO } from '@/data/scheduleData';
 import ScheduleGrid from '@/components/admin/ScheduleGrid';
 import TeacherSelector from '@/components/admin/TeacherSelector';
 import ConflictPanel from '@/components/admin/ConflictPanel';
@@ -32,15 +33,23 @@ export default function SchedulesPage() {
   const [loadingState, setLoadingState] = useState<LoadingState>('idle');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [originalTimetable, setOriginalTimetable] = useState<Timetable | null>(null);
+  const [teacherInfoOverrides, setTeacherInfoOverrides] = useState<Record<string, Partial<TeacherInfoData>>>({});
 
   const loadSchedules = useCallback(async () => {
     setLoadingState('loading');
     try {
       const schedules: Schedule[] = [];
+      const infoOverrides: Record<string, Partial<TeacherInfoData>> = {};
       
       for (const teacher of SPECIAL_TEACHERS) {
-        const data = await getTeacherScheduleFromDB(teacher.id, 1);
-        if (data) {
+        const doc = await getTeacherDocFromDB(teacher.id, 1);
+        
+        if (doc) {
+          if (doc.info) {
+            infoOverrides[teacher.id] = doc.info;
+          }
+
+          const data = doc.schedule;
           // Convert TeacherScheduleData to Timetable
           const timetable = createEmptyTimetable();
           const subject = getTeacherSubject(teacher.id);
@@ -73,6 +82,7 @@ export default function SchedulesPage() {
       }
       
       setAllSchedules(schedules);
+      setTeacherInfoOverrides(infoOverrides);
       
       const counts: { [teacherId: string]: number } = {};
       for (const teacher of SPECIAL_TEACHERS) {
@@ -118,8 +128,18 @@ export default function SchedulesPage() {
     setConflictMap(conflicts);
   }, [currentTimetable, allSchedules, selectedTeacherId]);
 
-  const handleCellChange = (day: Day, period: Period, className: string | null) => {
-    const subject = getTeacherSubject(selectedTeacherId);
+  const handleCellChange = (day: Day, period: Period, value: string | null) => {
+    let subject = getTeacherSubject(selectedTeacherId);
+    let className = value;
+
+    // Parse "Subject(Class)" format if present
+    if (value && value.includes('(') && value.includes(')')) {
+      const match = value.match(/^(.+)\((.+)\)$/);
+      if (match) {
+        subject = match[1];
+        className = match[2];
+      }
+    }
     
     setCurrentTimetable(prev => ({
       ...prev,
@@ -199,10 +219,18 @@ export default function SchedulesPage() {
     setSelectedTeacherId(teacherId);
   };
 
-  const selectedTeacher = SPECIAL_TEACHERS.find(t => t.id === selectedTeacherId);
+  const getTeacherInfo = (id: string) => {
+    const staticInfo = SPECIAL_TEACHERS.find(t => t.id === id);
+    const override = teacherInfoOverrides[id];
+    if (!staticInfo) return null;
+    return { ...staticInfo, ...override };
+  };
+
+  const selectedTeacher = getTeacherInfo(selectedTeacherId);
   const targetClasses = getTeacherTargetClasses(selectedTeacherId);
-  const subject = getTeacherSubject(selectedTeacherId);
+  const subject = selectedTeacher?.subject || getTeacherSubject(selectedTeacherId);
   const bgColor = SUBJECT_COLORS[subject] || 'bg-gray-200';
+  const additionalSubjects = selectedTeacher?.additionalSubjects || [];
 
   return (
     <div className="space-y-6">
@@ -324,6 +352,7 @@ export default function SchedulesPage() {
                 conflictMap={conflictMap}
                 onCellChange={handleCellChange}
                 disabled={loadingState === 'saving'}
+                additionalSubjects={additionalSubjects}
               />
             )}
           </div>

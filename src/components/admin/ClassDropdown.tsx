@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { SUBJECT_COLORS } from '@/types';
+import { ALL_CLASSES } from '@/data/scheduleData';
 
 interface ClassDropdownProps {
   value: string | null;
@@ -10,6 +11,7 @@ interface ClassDropdownProps {
   hasConflict?: boolean;
   onChange: (className: string | null) => void;
   disabled?: boolean;
+  additionalSubjects?: string[];
 }
 
 export default function ClassDropdown({
@@ -19,6 +21,7 @@ export default function ClassDropdown({
   hasConflict = false,
   onChange,
   disabled = false,
+  additionalSubjects = [],
 }: ClassDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
