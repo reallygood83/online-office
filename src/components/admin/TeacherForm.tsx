@@ -6,8 +6,8 @@ import { SpecialTeacher, GRADE_CLASS_CONFIG } from '@/types';
 interface TeacherFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (teacher: Omit<SpecialTeacher, 'targetClasses'> & { targetGrades: number[] }) => void;
-  initialData?: Partial<SpecialTeacher & { targetGrades?: number[] }>;
+  onSubmit: (teacher: Omit<SpecialTeacher, 'targetClasses'> & { targetGrades: number[]; additionalSubjects: string[] }) => void;
+  initialData?: Partial<SpecialTeacher & { targetGrades?: number[]; additionalSubjects?: string[] }>;
   mode: 'add' | 'edit';
   teacherType: 'special' | 'homeroom';
 }
@@ -27,6 +27,7 @@ export default function TeacherForm({
     id: '',
     name: '',
     subject: SUBJECTS[0],
+    additionalSubjects: [] as string[],
     weeklyHours: 20,
     targetGrades: [...ALL_GRADES] as number[],
   });
@@ -39,6 +40,7 @@ export default function TeacherForm({
         id: initialData.id || '',
         name: initialData.name || '',
         subject: initialData.subject || SUBJECTS[0],
+        additionalSubjects: initialData.additionalSubjects || [],
         weeklyHours: initialData.weeklyHours || 20,
         targetGrades: initialData.targetGrades || [...ALL_GRADES],
       });
@@ -47,6 +49,7 @@ export default function TeacherForm({
         id: '',
         name: '',
         subject: SUBJECTS[0],
+        additionalSubjects: [],
         weeklyHours: 20,
         targetGrades: [...ALL_GRADES],
       });
@@ -92,8 +95,19 @@ export default function TeacherForm({
       id: formData.id.trim(),
       name: formData.name.trim(),
       subject: formData.subject,
+      additionalSubjects: formData.additionalSubjects,
       weeklyHours: formData.weeklyHours,
       targetGrades: formData.targetGrades,
+    });
+  };
+
+  const toggleAdditionalSubject = (subject: string) => {
+    if (subject === formData.subject) return;
+    setFormData(prev => {
+      const subjects = prev.additionalSubjects.includes(subject)
+        ? prev.additionalSubjects.filter(s => s !== subject)
+        : [...prev.additionalSubjects, subject];
+      return { ...prev, additionalSubjects: subjects };
     });
   };
 
@@ -164,13 +178,17 @@ export default function TeacherForm({
           {teacherType === 'special' && (
             <>
               <div>
-                <label className="block font-bold mb-1">과목</label>
+                <label className="block font-bold mb-1">주 담당 과목</label>
                 <div className="flex flex-wrap gap-2">
                   {SUBJECTS.map((subject) => (
                     <button
                       key={subject}
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, subject }))}
+                      onClick={() => setFormData(prev => ({ 
+                        ...prev, 
+                        subject,
+                        additionalSubjects: prev.additionalSubjects.filter(s => s !== subject)
+                      }))}
                       className={`
                         px-4 py-2 font-bold border-3 border-black rounded-lg
                         transition-all duration-150
@@ -183,6 +201,37 @@ export default function TeacherForm({
                       {subject}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">
+                  추가 담당 과목 
+                  <span className="text-sm font-normal text-gray-500 ml-1">(선택사항)</span>
+                </label>
+                <p className="text-xs text-gray-500 mb-2">예: 도덕 전담이 체육도 병행하는 경우</p>
+                <div className="flex flex-wrap gap-2">
+                  {SUBJECTS.filter(s => s !== formData.subject).map((subject) => {
+                    const isSelected = formData.additionalSubjects.includes(subject);
+                    return (
+                      <button
+                        key={subject}
+                        type="button"
+                        onClick={() => toggleAdditionalSubject(subject)}
+                        className={`
+                          px-4 py-2 font-bold border-3 border-black rounded-lg
+                          transition-all duration-150
+                          ${isSelected 
+                            ? 'bg-neo-orange-300 shadow-neo-pressed translate-x-0.5 translate-y-0.5' 
+                            : 'bg-white shadow-neo-sm hover:shadow-neo-pressed hover:translate-x-0.5 hover:translate-y-0.5'
+                          }
+                        `}
+                      >
+                        {isSelected && <span className="mr-1">+</span>}
+                        {subject}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

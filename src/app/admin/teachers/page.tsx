@@ -24,6 +24,7 @@ interface HomeroomTeacher {
 interface SpecialTeacherWithName {
   id: string;
   subject: string;
+  additionalSubjects: string[];
   weeklyHours: number;
   targetGrades: number[];
   name: string;
@@ -40,6 +41,7 @@ function TeachersPageContent() {
     SPECIAL_TEACHERS.map(t => ({ 
       id: t.id, 
       subject: t.subject, 
+      additionalSubjects: [],
       weeklyHours: t.weeklyHours, 
       targetGrades: [...t.targetGrades],
       name: '' 
@@ -64,6 +66,7 @@ function TeachersPageContent() {
           return { 
             id: t.id, 
             subject: t.subject, 
+            additionalSubjects: firestoreT?.additionalSubjects || [],
             weeklyHours: t.weeklyHours, 
             targetGrades: [...t.targetGrades],
             name: firestoreT?.name || '' 
@@ -106,31 +109,36 @@ function TeachersPageContent() {
       id: teacher.id,
       name: teacher.name || '',
       subject: teacher.subject,
+      additionalSubjects: [...teacher.additionalSubjects],
       weeklyHours: teacher.weeklyHours,
       targetGrades: [...teacher.targetGrades],
     });
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = async (data: Omit<SpecialTeacher, 'targetClasses'> & { targetGrades: number[] }) => {
+  const handleFormSubmit = async (data: Omit<SpecialTeacher, 'targetClasses'> & { targetGrades: number[]; additionalSubjects: string[] }) => {
     try {
       await updateTeacherRealName(data.id, data.name);
       await updateTeacherInfo(data.id, {
         subject: data.subject,
         weeklyHours: data.weeklyHours,
         targetGrades: data.targetGrades.map(g => `${g}학년`).join(', '),
+        additionalSubjects: data.additionalSubjects,
       });
 
       if (formMode === 'add') {
-        const newTeacher = {
-          ...data,
-          targetClasses: getTeacherTargetClasses(data.id),
-        };
-        setSpecialTeachers(prev => [...prev, { ...newTeacher, targetGrades: data.targetGrades }]);
+        setSpecialTeachers(prev => [...prev, { 
+          id: data.id,
+          name: data.name,
+          subject: data.subject,
+          additionalSubjects: data.additionalSubjects,
+          weeklyHours: data.weeklyHours,
+          targetGrades: data.targetGrades,
+        }]);
       } else {
         setSpecialTeachers(prev => 
           prev.map(t => t.id === data.id 
-            ? { ...t, name: data.name, subject: data.subject, weeklyHours: data.weeklyHours, targetGrades: data.targetGrades }
+            ? { ...t, name: data.name, subject: data.subject, additionalSubjects: data.additionalSubjects, weeklyHours: data.weeklyHours, targetGrades: data.targetGrades }
             : t
           )
         );
@@ -234,6 +242,7 @@ function TeachersPageContent() {
                       <tr>
                         <th className="px-4 py-3 text-left font-bold">ID</th>
                         <th className="px-4 py-3 text-left font-bold">이름</th>
+                        <th className="px-4 py-3 text-left font-bold">추가 과목</th>
                         <th className="px-4 py-3 text-center font-bold">주당 수업</th>
                         <th className="px-4 py-3 text-left font-bold">담당 학년</th>
                         <th className="px-4 py-3 text-center font-bold">담당 학급</th>
@@ -253,6 +262,22 @@ function TeachersPageContent() {
                             </td>
                             <td className="px-4 py-3 font-medium">
                               {teacher.name || <span className="text-gray-400">미지정</span>}
+                            </td>
+                            <td className="px-4 py-3">
+                              {teacher.additionalSubjects.length > 0 ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {teacher.additionalSubjects.map((subj) => (
+                                    <span 
+                                      key={subj}
+                                      className={`px-2 py-0.5 ${SUBJECT_COLORS[subj] || 'bg-gray-200'} border border-black rounded text-xs font-bold`}
+                                    >
+                                      +{subj}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 text-sm">-</span>
+                              )}
                             </td>
                             <td className="px-4 py-3 text-center font-bold">
                               {teacher.weeklyHours}시간
@@ -314,7 +339,7 @@ function TeachersPageContent() {
                       })}
                       {teachers.length === 0 && (
                         <tr>
-                          <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                          <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                             등록된 {subject} 전담교사가 없습니다
                           </td>
                         </tr>

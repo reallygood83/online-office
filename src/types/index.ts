@@ -22,7 +22,8 @@ export interface Class {
 export interface SpecialTeacher {
   id: string;                    // "영어1", "체육2" etc.
   name: string;                  // Actual teacher name
-  subject: string;               // "영어", "체육", "음악", "도덕"
+  subject: string;               // "영어", "체육", "음악", "도덕" (주 담당 과목)
+  additionalSubjects?: string[]; // 추가 담당 과목 (예: 도덕 전담이 체육도 병행)
   weeklyHours: number;           // Weekly hours
   targetClasses: string[];       // Target class list
 }
