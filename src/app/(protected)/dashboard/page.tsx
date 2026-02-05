@@ -25,6 +25,8 @@ export default function DashboardPage() {
 
         console.log('Teachers from Firebase:', teachers);
         console.log('Classes from Firebase:', classes);
+        console.log('Classes length:', classes?.length);
+        console.log('Classes is array:', Array.isArray(classes));
 
         // Calculate total hours from teacher info
         let totalHours = 0;

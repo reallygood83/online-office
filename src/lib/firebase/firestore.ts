@@ -254,6 +254,10 @@ export const getUserNotifications = async (userId: string, limitCount: number = 
 };
 
 export const getUnreadNotificationCount = async (userId: string) => {
+  if (!userId) {
+    console.warn('getUnreadNotificationCount called with undefined userId');
+    return 0;
+  }
   const q = query(
     collection(db, 'notifications'),
     where('userId', '==', userId),
