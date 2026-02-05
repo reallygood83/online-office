@@ -1,17 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Announcement, 
-  AnnouncementCategory, 
+import {
+  Announcement,
+  AnnouncementCategory,
   ANNOUNCEMENT_CATEGORY_LABELS,
   ANNOUNCEMENT_PRIORITY_LABELS,
   ANNOUNCEMENT_PRIORITY_COLORS,
 } from '@/types';
-import { 
-  getAnnouncements, 
-  createAnnouncement, 
-  updateAnnouncement, 
+import {
+  getAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
   deleteAnnouncement,
   createNotificationsForAllUsers,
   getAllUsersWithEmail,
@@ -32,8 +32,8 @@ export default function AdminAnnouncementsPage() {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: 'general' as AnnouncementCategory,
-    priority: 'normal' as 'normal' | 'important' | 'urgent',
+    category: 'notice' as AnnouncementCategory,
+    priority: 'low' as 'low' | 'medium' | 'high',
     sendEmail: false,
   });
 
@@ -57,8 +57,8 @@ export default function AdminAnnouncementsPage() {
     setFormData({
       title: '',
       content: '',
-      category: 'general',
-      priority: 'normal',
+      category: 'notice',
+      priority: 'low',
       sendEmail: false,
     });
     setIsModalOpen(true);
@@ -276,7 +276,7 @@ export default function AdminAnnouncementsPage() {
               <label className="block font-bold mb-2">중요도</label>
               <Select
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'normal' | 'important' | 'urgent' })}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'low' | 'medium' | 'high' })}
                 options={Object.entries(ANNOUNCEMENT_PRIORITY_LABELS).map(([value, label]) => ({
                   value,
                   label,

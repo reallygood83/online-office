@@ -51,8 +51,8 @@ export default function AdminRoomsPage() {
     setFormData({
       name: room.name,
       description: room.description || '',
-      color: room.color,
-      order: room.order,
+      color: room.color || ROOM_COLORS[0],
+      order: room.order ?? 0,
     });
     setIsModalOpen(true);
   }

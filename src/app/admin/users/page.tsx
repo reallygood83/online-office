@@ -132,7 +132,9 @@ export default function AdminUsersPage() {
                         )}
                       </td>
                       <td className="text-sm text-gray-600">
-                        {user.createdAt?.toDate?.()?.toLocaleDateString('ko-KR') || '-'}
+                        {((user.createdAt as any)?.toDate
+                          ? (user.createdAt as any).toDate().toLocaleDateString('ko-KR')
+                          : new Date(user.createdAt).toLocaleDateString('ko-KR')) || '-'}
                       </td>
                       <td>
                         <Button
@@ -144,8 +146,8 @@ export default function AdminUsersPage() {
                           {updating === user.uid
                             ? '처리중...'
                             : user.isAdmin
-                            ? '권한 해제'
-                            : '관리자 지정'}
+                              ? '권한 해제'
+                              : '관리자 지정'}
                         </Button>
                       </td>
                     </tr>

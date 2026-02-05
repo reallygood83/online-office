@@ -2,7 +2,7 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
-import { onAuthChange, getUserData, signOut } from '@/lib/firebase/auth';
+import { subscribeToAuthState, getCurrentUserData, signOut } from '@/lib/firebase/auth';
 import { User } from '@/types';
 
 interface AuthContextType {
@@ -21,16 +21,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthChange(async (fbUser) => {
+    const unsubscribe = subscribeToAuthState(async (fbUser) => {
       setFirebaseUser(fbUser);
-      
+
       if (fbUser) {
-        const userData = await getUserData(fbUser.uid);
+        const userData = await getCurrentUserData(fbUser.uid);
         setUser(userData);
       } else {
         setUser(null);
       }
-      
+
       setLoading(false);
     });
 
@@ -45,19 +45,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     if (firebaseUser) {
-      const userData = await getUserData(firebaseUser.uid);
+      const userData = await getCurrentUserData(firebaseUser.uid);
       setUser(userData);
     }
   };
 
-  return {
-    firebaseUser,
-    user,
-    loading,
-    logout,
-    refreshUser,
-    children,
-  };
+  return (
+    <AuthContext.Provider value={{
+      firebaseUser,
+      user,
+      loading,
+      logout,
+      refreshUser,
+    }
+    }>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

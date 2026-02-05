@@ -137,7 +137,7 @@ export default function CalendarPage() {
       endDate: event.endDate || '',
       category: event.category,
       description: event.description || '',
-      isHoliday: event.isHoliday,
+      isHoliday: event.isHoliday ?? false,
     });
     setIsModalOpen(true);
   }

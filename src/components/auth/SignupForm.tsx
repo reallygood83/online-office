@@ -53,7 +53,7 @@ export function SignupForm() {
     setLoading(true);
 
     try {
-      await signUp(email, password, displayName);
+      await signUp(email, password, displayName, specialCode);
       router.push('/dashboard');
     } catch (err: any) {
       const errorMessages: Record<string, string> = {

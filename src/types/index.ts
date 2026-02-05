@@ -31,7 +31,8 @@ export interface SpecialTeacher {
 
 // Schedule Types
 export type Day = 'mon' | 'tue' | 'wed' | 'thu' | 'fri';
-export type Period = 1 | 2 | 3 | 4 | 5;
+export type DayOfWeek = Day;
+export type Period = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface ScheduleCell {
   subject: string;
@@ -76,7 +77,7 @@ export const DAY_LABELS: { [key in Day]: string } = {
 };
 
 export const DAYS: Day[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
-export const PERIODS: Period[] = [1, 2, 3, 4, 5];
+export const PERIODS: Period[] = [1, 2, 3, 4, 5, 6];
 
 // Grade/Class Configuration
 export const GRADE_CLASS_CONFIG = {
@@ -180,3 +181,127 @@ export const createEmptyTimetable = (): Timetable => ({
   thu: { 1: null, 2: null, 3: null, 4: null, 5: null },
   fri: { 1: null, 2: null, 3: null, 4: null, 5: null },
 });
+
+
+// ========== ANNOUNCEMENTS ==========
+// ========== ANNOUNCEMENTS ==========
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  category: AnnouncementCategory;
+  priority: 'low' | 'medium' | 'high';
+  authorId?: string;
+  authorName?: string;
+  createdBy?: string;
+  createdByName?: string;
+  createdAt: any;
+  isPublic?: boolean;
+  sendEmail?: boolean;
+}
+
+export const ANNOUNCEMENT_CATEGORY_LABELS = {
+  notice: '일반 공지',
+  event: '행사/일정',
+  urgent: '긴급 공지',
+};
+
+export const ANNOUNCEMENT_PRIORITY_LABELS = {
+  low: '보통',
+  medium: '중요',
+  high: '긴급',
+};
+
+export const ANNOUNCEMENT_PRIORITY_COLORS = {
+  low: 'bg-slate-100 text-slate-800 border-slate-200',
+  medium: 'bg-amber-50 text-amber-700 border-amber-200',
+  high: 'bg-rose-50 text-rose-700 border-rose-200',
+};
+
+export type AnnouncementCategory = keyof typeof ANNOUNCEMENT_CATEGORY_LABELS;
+
+
+// ========== SCHOOL EVENTS ==========
+export type EventCategory = 'academic' | 'holiday' | 'special' | 'exam';
+
+export interface SchoolEvent {
+  id: string;
+  title: string;
+  date: any; // Timestamp or Date
+  endDate?: any; // Optional end date for multi-day events
+  category: EventCategory;
+  description?: string;
+  isHoliday?: boolean; // Whether this is a holiday
+  createdBy: string;
+}
+
+export const EVENT_CATEGORY_LABELS: Record<EventCategory, string> = {
+  academic: '학사일정',
+  holiday: '공휴일/휴업일',
+  special: '특별활동',
+  exam: '고사/평가'
+};
+
+export const EVENT_CATEGORY_COLORS: Record<EventCategory, string> = {
+  academic: 'bg-blue-50 text-blue-700 border-blue-200',
+  holiday: 'bg-red-50 text-red-700 border-red-200',
+  special: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  exam: 'bg-purple-50 text-purple-700 border-purple-200'
+};
+
+
+// ========== SPECIAL ROOMS ==========
+export interface SpecialRoom {
+  id: string;
+  name: string;
+  location?: string;
+  capacity?: number;
+  description?: string;
+  color?: string;
+  order?: number;
+}
+
+export const ROOM_COLORS = [
+  'bg-red-100', 'bg-orange-100', 'bg-amber-100',
+  'bg-yellow-100', 'bg-lime-100', 'bg-green-100',
+  'bg-emerald-100', 'bg-teal-100', 'bg-cyan-100',
+  'bg-sky-100', 'bg-blue-100', 'bg-indigo-100',
+  'bg-violet-100', 'bg-purple-100', 'bg-fuchsia-100', 'bg-pink-100', 'bg-rose-100'
+];
+
+
+// ========== RESERVATIONS ==========
+export type ReservationPeriod = 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface RoomReservation {
+  id: string;
+  roomId: string;
+  roomName?: string;
+  weekStart: string;
+  day: DayOfWeek;
+  period: ReservationPeriod;
+  reservedBy: string;
+  reserverName: string;
+  className?: string;
+  purpose?: string;
+  createdAt: any;
+}
+
+// ========== USER NOTIFICATIONS ==========
+export interface UserNotification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'announcement' | 'reservation_made' | 'reservation_cancelled' | 'calendar_event' | 'info';
+  link?: string;
+  isRead: boolean;
+  relatedId?: string;
+  createdAt: any;
+}
+
+export interface TeacherInfoData {
+  subject: string;
+  weeklyHours: number;
+  targetGrades: string;
+}

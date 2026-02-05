@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, Modal, Select } from '@/components/ui';
 import { TEACHERS, TEACHER_INFO, SUBJECT_BG_COLORS, SPECIALIST_SUBJECTS } from '@/data/scheduleData';
-import { 
-  getTeacherRealNames, 
-  updateTeacherRealName, 
-  getTeacherInfoOverrides, 
+import {
+  getTeacherRealNames,
+  updateTeacherRealName,
+  getTeacherInfoOverrides,
   updateTeacherInfo,
-  TeacherInfoData 
 } from '@/lib/firebase/firestore';
+import { TeacherInfoData } from '@/types';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useTeacherNames } from '@/lib/hooks/useTeacherNames';
 
@@ -72,7 +72,7 @@ export default function TeachersPage() {
     setSaving(true);
     try {
       const promises: Promise<void>[] = [];
-      
+
       if (editName.trim()) {
         promises.push(updateTeacherRealName(editingTeacher, editName.trim()));
         setRealNames(prev => ({ ...prev, [editingTeacher]: editName.trim() }));
@@ -130,7 +130,7 @@ export default function TeachersPage() {
 
   const calculateStats = () => {
     const stats: Record<string, { count: number; hours: number }> = {};
-    
+
     TEACHERS.forEach(teacherId => {
       const info = getTeacherInfo(teacherId);
       if (!stats[info.subject]) {
@@ -139,7 +139,7 @@ export default function TeachersPage() {
       stats[info.subject].count++;
       stats[info.subject].hours += info.weeklyHours;
     });
-    
+
     return stats;
   };
 
