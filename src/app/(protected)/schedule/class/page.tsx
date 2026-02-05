@@ -6,6 +6,7 @@ import { EditableClassScheduleTable } from '@/components/schedule/ScheduleTable'
 import { SemesterSelector } from '@/components/schedule/SemesterSelector';
 import { ALL_CLASSES, SUBJECT_BG_COLORS, ClassScheduleData } from '@/data/scheduleData';
 import { getClassScheduleFromDB, saveClassSchedule } from '@/lib/firebase/scheduleService';
+import { downloadClassSchedulesExcel } from '@/lib/excelExport';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { DayOfWeek } from '@/types';
 
@@ -105,6 +106,18 @@ export default function ClassSchedulePage() {
     setIsEditMode(false);
   };
 
+  const handleDownloadExcel = async () => {
+    // Load all class schedules
+    const allSchedules: Record<string, ClassScheduleData> = {};
+    for (const cls of ALL_CLASSES) {
+      const data = await getClassScheduleFromDB(cls, semester);
+      if (data) {
+        allSchedules[cls] = data;
+      }
+    }
+    downloadClassSchedulesExcel(allSchedules, semester);
+  };
+
   const getTotalHours = () => {
     if (!schedule) return 0;
     let total = 0;
@@ -152,7 +165,18 @@ export default function ClassSchedulePage() {
           <h1 className="text-3xl font-extrabold">🏫 학급별 시간표</h1>
           <p className="text-gray-600 mt-1">학급별 전담 수업 시간표를 확인하고 편집하세요</p>
         </div>
-        <SemesterSelector semester={semester} onSemesterChange={handleSemesterChange} />
+        <div className="flex gap-2">
+          <button
+            onClick={handleDownloadExcel}
+            className="neo-button px-4 py-2 bg-neo-green-300 border-2 border-black rounded-lg font-bold shadow-neo-sm hover:shadow-neo-pressed hover:translate-x-0.5 hover:translate-y-0.5 transition-all flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            엑셀 다운로드
+          </button>
+          <SemesterSelector semester={semester} onSemesterChange={handleSemesterChange} />
+        </div>
       </div>
 
       {saveMessage && (

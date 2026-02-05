@@ -7,6 +7,7 @@ import { SemesterSelector } from '@/components/schedule/SemesterSelector';
 import { useTeacherNames } from '@/lib/hooks/useTeacherNames';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { saveTeacherSchedule, getTeacherDocFromDB } from '@/lib/firebase/scheduleService';
+import { downloadTeacherSchedulesExcel } from '@/lib/excelExport';
 import { DayOfWeek, DEFAULT_SCHEDULES, TeacherInfoData } from '@/types';
 import {
   TEACHERS,
@@ -107,6 +108,10 @@ export default function TeacherSchedulePage() {
     }
   };
 
+  const handleDownloadExcel = () => {
+    downloadTeacherSchedulesExcel(displaySchedules, semester);
+  };
+
   const handleCancel = () => {
     setEditedSchedules({});
     setIsEditMode(false);
@@ -119,7 +124,18 @@ export default function TeacherSchedulePage() {
           <h1 className="text-3xl font-extrabold">👨‍🏫 전담교사 시간표</h1>
           <p className="text-gray-600 mt-1">전담교사별 주간 수업 시간표를 확인하세요</p>
         </div>
-        <SemesterSelector semester={semester} onSemesterChange={setSemester} />
+        <div className="flex gap-2">
+          <button
+            onClick={handleDownloadExcel}
+            className="neo-button px-4 py-2 bg-neo-green-300 border-2 border-black rounded-lg font-bold shadow-neo-sm hover:shadow-neo-pressed hover:translate-x-0.5 hover:translate-y-0.5 transition-all flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            엑셀 다운로드
+          </button>
+          <SemesterSelector semester={semester} onSemesterChange={setSemester} />
+        </div>
       </div>
 
       <Card>
