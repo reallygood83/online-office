@@ -258,6 +258,23 @@ export async function getTeacherScheduleFromDB(
   return schedules[teacherId];
 }
 
+export async function getTeacherDocFromDB(
+  teacherId: string,
+  semester: 1 | 2
+): Promise<TeacherScheduleDoc | null> {
+  try {
+    const docRef = doc(db, 'teacherSchedules', `${teacherId}_S${semester}`);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return docSnap.data() as TeacherScheduleDoc;
+    }
+  } catch (error) {
+    console.error('Failed to load teacher doc:', error);
+  }
+  return null;
+}
+
 export async function initializeScheduleData(): Promise<{ success: boolean; message: string }> {
   try {
     const batch = writeBatch(db);

@@ -6,8 +6,8 @@ import { TeacherScheduleTable, EditableTeacherScheduleTable } from '@/components
 import { SemesterSelector } from '@/components/schedule/SemesterSelector';
 import { useTeacherNames } from '@/lib/hooks/useTeacherNames';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { saveTeacherSchedule, getTeacherScheduleFromDB } from '@/lib/firebase/scheduleService';
-import { DayOfWeek, DEFAULT_SCHEDULES } from '@/types';
+import { saveTeacherSchedule, getTeacherDocFromDB } from '@/lib/firebase/scheduleService';
+import { DayOfWeek, DEFAULT_SCHEDULES, TeacherInfoData } from '@/types';
 import {
   TEACHERS,
   TEACHER_INFO,
@@ -24,6 +24,7 @@ export default function TeacherSchedulePage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedSchedules, setEditedSchedules] = useState<Record<string, TeacherScheduleData>>({});
   const [loadedSchedules, setLoadedSchedules] = useState<Record<string, TeacherScheduleData>>({});
+  const [teacherInfoOverrides, setTeacherInfoOverrides] = useState<Record<string, Partial<TeacherInfoData>>>({});
   const [isSaving, setIsSaving] = useState(false);
   const { teacherRealNames, formatTeacherWithSubject } = useTeacherNames();
   const { user } = useAuth();
@@ -31,26 +32,38 @@ export default function TeacherSchedulePage() {
   useEffect(() => {
     const loadAllSchedules = async () => {
       const schedules: Record<string, TeacherScheduleData> = {};
+      const infoOverrides: Record<string, Partial<TeacherInfoData>> = {};
+      
       for (const teacherId of TEACHERS) {
-        const data = await getTeacherScheduleFromDB(teacherId, semester);
-        if (data) schedules[teacherId] = data;
+        const doc = await getTeacherDocFromDB(teacherId, semester);
+        if (doc) {
+          schedules[teacherId] = doc.schedule;
+          if (doc.info) {
+            infoOverrides[teacherId] = doc.info;
+          }
+        }
       }
       setLoadedSchedules(schedules);
+      setTeacherInfoOverrides(infoOverrides);
     };
     loadAllSchedules();
     setEditedSchedules({});
   }, [semester]);
 
   const baseScheduleData = semester === 1 ? TEACHER_SCHEDULES_SEMESTER1 : TEACHER_SCHEDULES_SEMESTER2;
-  // Merge: loaded overrides static, edited overrides loaded
   const currentSchedules = { ...baseScheduleData, ...loadedSchedules };
   const displaySchedules = { ...currentSchedules, ...editedSchedules };
   
-  const teacherInfo = TEACHER_INFO[selectedTeacher];
+  const getTeacherInfo = (id: string) => ({
+    ...TEACHER_INFO[id],
+    ...teacherInfoOverrides[id]
+  });
+
+  const teacherInfo = getTeacherInfo(selectedTeacher);
 
   const getTeacherDisplayName = (teacherId: string) => {
     const realName = teacherRealNames[teacherId];
-    const info = TEACHER_INFO[teacherId];
+    const info = getTeacherInfo(teacherId);
     return realName ? `${realName}(${info.subject})` : teacherId;
   };
 
@@ -125,7 +138,7 @@ export default function TeacherSchedulePage() {
         <CardContent>
           <div className="flex flex-wrap gap-2 mb-4">
             {TEACHERS.map((teacher) => {
-              const info = TEACHER_INFO[teacher];
+              const info = getTeacherInfo(teacher);
               const bgColor = SUBJECT_BG_COLORS[info.subject];
               return (
                 <button
@@ -218,7 +231,7 @@ export default function TeacherSchedulePage() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {TEACHERS.map((teacher) => {
-              const info = TEACHER_INFO[teacher];
+              const info = getTeacherInfo(teacher);
               const bgColor = SUBJECT_BG_COLORS[info.subject];
               const realName = teacherRealNames[teacher];
               return (

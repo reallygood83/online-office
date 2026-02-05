@@ -150,8 +150,8 @@ export const TEACHER_INFO: Record<string, TeacherInfoData> = {
   '체육2': { subject: '체육', weeklyHours: 22, targetGrades: '4-5학년' },
   '체육3': { subject: '체육', weeklyHours: 22, targetGrades: '2학년, 6학년' },
   '음악': { subject: '음악', weeklyHours: 18, targetGrades: '5-6학년' },
-  '도덕1': { subject: '도덕', weeklyHours: 16, targetGrades: '1, 3, 5학년', additionalSubjects: ['체육'] },
-  '도덕2': { subject: '도덕', weeklyHours: 16, targetGrades: '2, 4, 6학년', additionalSubjects: ['체육'] },
+  '도덕1': { subject: '도덕', weeklyHours: 18, targetGrades: '1, 3, 5학년', additionalSubjects: ['체육'] },
+  '도덕2': { subject: '도덕', weeklyHours: 18, targetGrades: '2, 4, 6학년', additionalSubjects: ['체육'] },
 };
 
 export const ALL_SUBJECTS = [

@@ -60,9 +60,12 @@ export function TeacherScheduleTable({ teacherId, schedule }: TeacherScheduleTab
                   >
                     {cell ? (
                       <div>
-                        <div>{formatClassWithHomeTeacher(className)}</div>
-                        {typeof cell === 'object' && cell.subject !== teacherInfo?.subject && (
-                          <div className="text-xs text-gray-700 font-normal">({cell.subject})</div>
+                        {typeof cell === 'object' && cell.subject !== teacherInfo?.subject ? (
+                          <div className="font-bold text-gray-900">
+                            {cell.subject}({formatClassWithHomeTeacher(className)})
+                          </div>
+                        ) : (
+                          <div>{formatClassWithHomeTeacher(className)}</div>
                         )}
                       </div>
                     ) : '-'}
@@ -474,9 +477,12 @@ export function EditableTeacherScheduleTable({
                   >
                     {cell ? (
                       <div>
-                        {formatClassWithHomeTeacher(className)}
-                        {typeof cell === 'object' && cell.subject !== mainSubject && (
-                          <div className="text-xs text-gray-700 font-normal mt-0.5">({cell.subject})</div>
+                        {typeof cell === 'object' && cell.subject !== mainSubject ? (
+                          <div className="font-bold text-gray-900">
+                            {cell.subject}({formatClassWithHomeTeacher(className)})
+                          </div>
+                        ) : (
+                          <div>{formatClassWithHomeTeacher(className)}</div>
                         )}
                       </div>
                     ) : '-'}
