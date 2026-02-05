@@ -193,18 +193,18 @@ export function getClassSchedule(
   const days: DayOfWeek[] = ['mon', 'tue', 'wed', 'thu', 'fri'];
   
   const result: ClassScheduleData = {
-    mon: [null, null, null, null, null],
-    tue: [null, null, null, null, null],
-    wed: [null, null, null, null, null],
-    thu: [null, null, null, null, null],
-    fri: [null, null, null, null, null],
+    mon: [null, null, null, null, null, null],
+    tue: [null, null, null, null, null, null],
+    wed: [null, null, null, null, null, null],
+    thu: [null, null, null, null, null, null],
+    fri: [null, null, null, null, null, null],
   };
 
   for (const [teacherId, schedule] of Object.entries(teacherSchedules)) {
     const teacherInfo = TEACHER_INFO[teacherId];
     
     for (const day of days) {
-      for (let period = 0; period < 5; period++) {
+      for (let period = 0; period < 6; period++) {
         if (schedule[day][period] === className) {
           result[day][period] = {
             subject: teacherInfo.subject,

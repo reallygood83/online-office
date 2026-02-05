@@ -9,7 +9,7 @@ import {
   getTeacherTargetClasses,
   SpecialTeacher,
 } from '@/types';
-import { getClasses, getTeachers } from '@/lib/firebase/firestore';
+import { getClasses, getTeachers, updateTeacherInfo, updateTeacherRealName } from '@/lib/firebase/firestore';
 import TeacherForm from '@/components/admin/TeacherForm';
 
 type TabType = 'special' | 'homeroom';
@@ -114,6 +114,13 @@ function TeachersPageContent() {
 
   const handleFormSubmit = async (data: Omit<SpecialTeacher, 'targetClasses'> & { targetGrades: number[] }) => {
     try {
+      await updateTeacherRealName(data.id, data.name);
+      await updateTeacherInfo(data.id, {
+        subject: data.subject,
+        weeklyHours: data.weeklyHours,
+        targetGrades: data.targetGrades.map(g => `${g}학년`).join(', '),
+      });
+
       if (formMode === 'add') {
         const newTeacher = {
           ...data,

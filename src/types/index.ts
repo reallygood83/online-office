@@ -141,19 +141,68 @@ export interface ConflictMap {
 }
 
 export const DEFAULT_SCHEDULES: { [teacherId: string]: Timetable } = {
+  '영어1': {
+    mon: { 1: { subject: '영어', className: '5-1' }, 2: { subject: '영어', className: '5-2' }, 3: { subject: '영어', className: '5-3' }, 4: { subject: '영어', className: '5-6' }, 5: null, 6: null },
+    tue: { 1: { subject: '영어', className: '5-4' }, 2: { subject: '영어', className: '5-5' }, 3: { subject: '영어', className: '5-6' }, 4: { subject: '영어', className: '3-6' }, 5: null, 6: null },
+    wed: { 1: { subject: '영어', className: '5-1' }, 2: { subject: '영어', className: '5-2' }, 3: { subject: '영어', className: '5-3' }, 4: { subject: '영어', className: '5-4' }, 5: null, 6: null },
+    thu: { 1: { subject: '영어', className: '5-4' }, 2: { subject: '영어', className: '5-5' }, 3: { subject: '영어', className: '5-6' }, 4: { subject: '영어', className: '3-6' }, 5: null, 6: null },
+    fri: { 1: { subject: '영어', className: '5-1' }, 2: { subject: '영어', className: '5-2' }, 3: { subject: '영어', className: '5-3' }, 4: { subject: '영어', className: '5-5' }, 5: null, 6: null },
+  },
+  '영전강': {
+    mon: { 1: { subject: '영어', className: '6-2' }, 2: { subject: '영어', className: '6-1' }, 3: { subject: '영어', className: '6-3' }, 4: { subject: '영어', className: '6-4' }, 5: null, 6: null },
+    tue: { 1: { subject: '영어', className: '6-4' }, 2: { subject: '영어', className: '6-5' }, 3: { subject: '영어', className: '4-6' }, 4: { subject: '영어', className: '6-6' }, 5: null, 6: null },
+    wed: { 1: { subject: '영어', className: '6-1' }, 2: { subject: '영어', className: '6-2' }, 3: { subject: '영어', className: '6-3' }, 4: { subject: '영어', className: '6-6' }, 5: null, 6: null },
+    thu: { 1: { subject: '영어', className: '6-4' }, 2: { subject: '영어', className: '6-5' }, 3: { subject: '영어', className: '4-6' }, 4: { subject: '영어', className: '6-5' }, 5: null, 6: null },
+    fri: { 1: { subject: '영어', className: '6-1' }, 2: { subject: '영어', className: '6-2' }, 3: { subject: '영어', className: '6-3' }, 4: { subject: '영어', className: '6-6' }, 5: null, 6: null },
+  },
+  '영어2': {
+    mon: { 1: { subject: '영어', className: '3-1' }, 2: { subject: '영어', className: '3-2' }, 3: { subject: '영어', className: '3-3' }, 4: { subject: '영어', className: '3-5' }, 5: null, 6: null },
+    tue: { 1: { subject: '영어', className: '4-1' }, 2: { subject: '영어', className: '4-2' }, 3: { subject: '영어', className: '4-3' }, 4: { subject: '영어', className: '4-5' }, 5: null, 6: null },
+    wed: { 1: { subject: '영어', className: '3-4' }, 2: { subject: '영어', className: '3-5' }, 3: { subject: '영어', className: '4-4' }, 4: { subject: '영어', className: '4-5' }, 5: null, 6: null },
+    thu: { 1: { subject: '영어', className: '4-1' }, 2: { subject: '영어', className: '4-2' }, 3: { subject: '영어', className: '4-3' }, 4: { subject: '영어', className: '4-4' }, 5: null, 6: null },
+    fri: { 1: { subject: '영어', className: '3-1' }, 2: { subject: '영어', className: '3-2' }, 3: { subject: '영어', className: '3-3' }, 4: { subject: '영어', className: '3-4' }, 5: null, 6: null },
+  },
+  '체육1': {
+    mon: { 1: { subject: '체육', className: '1-1' }, 2: { subject: '체육', className: '3-1' }, 3: { subject: '체육', className: '3-4' }, 4: null, 5: null, 6: null },
+    tue: { 1: { subject: '체육', className: '1-2' }, 2: { subject: '체육', className: '3-2' }, 3: { subject: '체육', className: '3-5' }, 4: { subject: '체육', className: '5-6' }, 5: null, 6: null },
+    wed: { 1: { subject: '체육', className: '1-3' }, 2: { subject: '체육', className: '3-3' }, 3: { subject: '체육', className: '3-6' }, 4: null, 5: null, 6: null },
+    thu: { 1: { subject: '체육', className: '1-4' }, 2: { subject: '체육', className: '3-1' }, 3: { subject: '체육', className: '3-4' }, 4: { subject: '체육', className: '5-6' }, 5: null, 6: null },
+    fri: { 1: { subject: '체육', className: '3-2' }, 2: { subject: '체육', className: '3-3' }, 3: { subject: '체육', className: '3-5' }, 4: { subject: '체육', className: '3-6' }, 5: null, 6: null },
+  },
+  '체육2': {
+    mon: { 1: { subject: '체육', className: '4-1' }, 2: { subject: '체육', className: '4-2' }, 3: { subject: '체육', className: '4-3' }, 4: { subject: '체육', className: '5-1' }, 5: null, 6: null },
+    tue: { 1: { subject: '체육', className: '4-4' }, 2: { subject: '체육', className: '4-5' }, 3: { subject: '체육', className: '5-4' }, 4: { subject: '체육', className: '5-2' }, 5: null, 6: null },
+    wed: { 1: { subject: '체육', className: '4-1' }, 2: { subject: '체육', className: '4-2' }, 3: { subject: '체육', className: '4-3' }, 4: { subject: '체육', className: '5-1' }, 5: { subject: '체육', className: '4-6' }, 6: null },
+    thu: { 1: { subject: '체육', className: '4-4' }, 2: { subject: '체육', className: '4-5' }, 3: { subject: '체육', className: '5-2' }, 4: { subject: '체육', className: '5-3' }, 5: { subject: '체육', className: '5-5' }, 6: null },
+    fri: { 1: { subject: '체육', className: '4-6' }, 2: { subject: '체육', className: '5-3' }, 3: { subject: '체육', className: '5-4' }, 4: null, 5: { subject: '체육', className: '5-5' }, 6: null },
+  },
+  '체육3': {
+    mon: { 1: { subject: '체육', className: '6-1' }, 2: { subject: '체육', className: '6-6' }, 3: { subject: '체육', className: '6-5' }, 4: { subject: '체육', className: '6-2' }, 5: null, 6: null },
+    tue: { 1: { subject: '체육', className: '2-1' }, 2: { subject: '체육', className: '6-3' }, 3: { subject: '체육', className: '6-1' }, 4: { subject: '체육', className: '6-2' }, 5: { subject: '체육', className: '6-4' }, 6: null },
+    wed: { 1: { subject: '체육', className: '2-2' }, 2: { subject: '체육', className: '6-6' }, 3: { subject: '체육', className: '6-5' }, 4: { subject: '체육', className: '6-4' }, 5: null, 6: null },
+    thu: { 1: { subject: '체육', className: '2-3' }, 2: { subject: '체육', className: '6-3' }, 3: { subject: '체육', className: '6-1' }, 4: { subject: '체육', className: '6-2' }, 5: null, 6: null },
+    fri: { 1: { subject: '체육', className: '2-4' }, 2: { subject: '체육', className: '6-4' }, 3: { subject: '체육', className: '6-6' }, 4: { subject: '체육', className: '6-3' }, 5: { subject: '체육', className: '6-5' }, 6: null },
+  },
+  '음악': {
+    mon: { 1: { subject: '음악', className: '5-4' }, 2: { subject: '음악', className: '5-5' }, 3: { subject: '음악', className: '5-6' }, 4: { subject: '음악', className: '6-1' }, 5: null, 6: null },
+    tue: { 1: { subject: '음악', className: '6-3' }, 2: { subject: '음악', className: '6-6' }, 3: { subject: '음악', className: '5-1' }, 4: { subject: '음악', className: '5-3' }, 5: null, 6: null },
+    wed: { 1: { subject: '음악', className: '5-4' }, 2: { subject: '음악', className: '5-5' }, 3: { subject: '음악', className: '5-6' }, 4: null, 5: null, 6: null },
+    thu: { 1: { subject: '음악', className: '5-3' }, 2: { subject: '음악', className: '6-4' }, 3: { subject: '음악', className: '5-1' }, 4: { subject: '음악', className: '5-2' }, 5: null, 6: null },
+    fri: { 1: { subject: '음악', className: '6-2' }, 2: null, 3: { subject: '음악', className: '6-5' }, 4: { subject: '음악', className: '5-2' }, 5: null, 6: null },
+  },
   '도덕1': {
-    mon: { 1: null, 2: { subject: '도덕', className: '1-2' }, 3: { subject: '도덕', className: '1-3' }, 4: { subject: '도덕', className: '1-4' }, 5: null },
-    tue: { 1: { subject: '도덕', className: '3-1' }, 2: null, 3: { subject: '도덕', className: '3-3' }, 4: { subject: '도덕', className: '5-1' }, 5: { subject: '도덕', className: '5-2' } },
-    wed: { 1: null, 2: { subject: '도덕', className: '3-4' }, 3: { subject: '도덕', className: '3-6' }, 4: { subject: '도덕', className: '3-5' }, 5: null },
-    thu: { 1: { subject: '도덕', className: '5-3' }, 2: { subject: '도덕', className: '5-4' }, 3: { subject: '도덕', className: '5-5' }, 4: { subject: '도덕', className: '3-2' }, 5: null },
-    fri: { 1: { subject: '도덕', className: '5-6' }, 2: { subject: '도덕', className: '1-1' }, 3: null, 4: null, 5: null },
+    mon: { 1: null, 2: { subject: '도덕', className: '1-2' }, 3: { subject: '도덕', className: '1-3' }, 4: { subject: '도덕', className: '1-4' }, 5: null, 6: null },
+    tue: { 1: { subject: '도덕', className: '3-1' }, 2: null, 3: { subject: '도덕', className: '3-3' }, 4: { subject: '도덕', className: '5-1' }, 5: { subject: '도덕', className: '5-2' }, 6: null },
+    wed: { 1: null, 2: { subject: '도덕', className: '3-4' }, 3: { subject: '도덕', className: '3-6' }, 4: { subject: '도덕', className: '3-5' }, 5: null, 6: null },
+    thu: { 1: { subject: '도덕', className: '5-3' }, 2: { subject: '도덕', className: '5-4' }, 3: { subject: '도덕', className: '5-5' }, 4: { subject: '도덕', className: '3-2' }, 5: null, 6: null },
+    fri: { 1: { subject: '도덕', className: '5-6' }, 2: { subject: '도덕', className: '1-1' }, 3: null, 4: null, 5: null, 6: null },
   },
   '도덕2': {
-    mon: { 1: { subject: '도덕', className: '2-1' }, 2: { subject: '도덕', className: '2-2' }, 3: { subject: '도덕', className: '2-3' }, 4: { subject: '도덕', className: '2-4' }, 5: null },
-    tue: { 1: { subject: '도덕', className: '6-1' }, 2: { subject: '도덕', className: '6-2' }, 3: { subject: '도덕', className: '6-3' }, 4: null, 5: null },
-    wed: { 1: { subject: '도덕', className: '6-4' }, 2: { subject: '도덕', className: '6-5' }, 3: { subject: '도덕', className: '6-6' }, 4: null, 5: null },
-    thu: { 1: null, 2: { subject: '도덕', className: '4-1' }, 3: { subject: '도덕', className: '4-2' }, 4: { subject: '도덕', className: '4-3' }, 5: null },
-    fri: { 1: { subject: '도덕', className: '4-4' }, 2: { subject: '도덕', className: '4-5' }, 3: { subject: '도덕', className: '4-6' }, 4: null, 5: null },
+    mon: { 1: { subject: '도덕', className: '2-1' }, 2: { subject: '도덕', className: '2-2' }, 3: { subject: '도덕', className: '2-3' }, 4: { subject: '도덕', className: '2-4' }, 5: null, 6: null },
+    tue: { 1: { subject: '도덕', className: '6-1' }, 2: { subject: '도덕', className: '6-2' }, 3: { subject: '도덕', className: '6-3' }, 4: null, 5: null, 6: null },
+    wed: { 1: { subject: '도덕', className: '6-4' }, 2: { subject: '도덕', className: '6-5' }, 3: { subject: '도덕', className: '6-6' }, 4: null, 5: null, 6: null },
+    thu: { 1: null, 2: { subject: '도덕', className: '4-1' }, 3: { subject: '도덕', className: '4-2' }, 4: { subject: '도덕', className: '4-3' }, 5: null, 6: null },
+    fri: { 1: { subject: '도덕', className: '4-4' }, 2: { subject: '도덕', className: '4-5' }, 3: { subject: '도덕', className: '4-6' }, 4: null, 5: null, 6: null },
   },
 };
 
@@ -163,11 +212,11 @@ export const getTeacherSubject = (teacherId: string): string => {
 };
 
 export const createEmptyTimetable = (): Timetable => ({
-  mon: { 1: null, 2: null, 3: null, 4: null, 5: null },
-  tue: { 1: null, 2: null, 3: null, 4: null, 5: null },
-  wed: { 1: null, 2: null, 3: null, 4: null, 5: null },
-  thu: { 1: null, 2: null, 3: null, 4: null, 5: null },
-  fri: { 1: null, 2: null, 3: null, 4: null, 5: null },
+  mon: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null },
+  tue: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null },
+  wed: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null },
+  thu: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null },
+  fri: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null },
 });
 
 
@@ -292,4 +341,5 @@ export interface TeacherInfoData {
   subject: string;
   weeklyHours: number;
   targetGrades: string;
+  additionalSubjects?: string[];  // 다과목 지원
 }

@@ -1,25 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Select } from '@/components/ui';
-import { TeacherScheduleTable } from '@/components/schedule/ScheduleTable';
+import { TeacherScheduleTable, EditableTeacherScheduleTable } from '@/components/schedule/ScheduleTable';
 import { SemesterSelector } from '@/components/schedule/SemesterSelector';
 import { useTeacherNames } from '@/lib/hooks/useTeacherNames';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { DayOfWeek, DEFAULT_SCHEDULES } from '@/types';
 import {
   TEACHERS,
   TEACHER_INFO,
   TEACHER_SCHEDULES_SEMESTER1,
   TEACHER_SCHEDULES_SEMESTER2,
   SUBJECT_BG_COLORS,
+  TeacherScheduleData,
 } from '@/data/scheduleData';
 
 export default function TeacherSchedulePage() {
   const [semester, setSemester] = useState<1 | 2>(1);
   const [selectedTeacher, setSelectedTeacher] = useState<string>(TEACHERS[0]);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedSchedules, setEditedSchedules] = useState<Record<string, TeacherScheduleData>>({});
   const { teacherRealNames, formatTeacherWithSubject } = useTeacherNames();
+  const { user } = useAuth();
 
-  const scheduleData = semester === 1 ? TEACHER_SCHEDULES_SEMESTER1 : TEACHER_SCHEDULES_SEMESTER2;
+  const baseScheduleData = semester === 1 ? TEACHER_SCHEDULES_SEMESTER1 : TEACHER_SCHEDULES_SEMESTER2;
+  const scheduleData = { ...baseScheduleData, ...editedSchedules };
   const teacherInfo = TEACHER_INFO[selectedTeacher];
+
+  useEffect(() => {
+    setEditedSchedules({});
+  }, [semester]);
 
   const getTeacherDisplayName = (teacherId: string) => {
     const realName = teacherRealNames[teacherId];
@@ -31,6 +42,30 @@ export default function TeacherSchedulePage() {
     value: t,
     label: getTeacherDisplayName(t),
   }));
+
+  const handleCellChange = (day: DayOfWeek, periodIdx: number, value: string | null) => {
+    setEditedSchedules((prev) => {
+      const currentSchedule = prev[selectedTeacher] || { ...baseScheduleData[selectedTeacher] };
+      const newDaySchedule = [...currentSchedule[day]];
+      newDaySchedule[periodIdx] = value;
+      return {
+        ...prev,
+        [selectedTeacher]: {
+          ...currentSchedule,
+          [day]: newDaySchedule,
+        },
+      };
+    });
+  };
+
+  const handleSave = async () => {
+    setIsEditMode(false);
+  };
+
+  const handleCancel = () => {
+    setEditedSchedules({});
+    setIsEditMode(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -82,23 +117,64 @@ export default function TeacherSchedulePage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-4">
-            <span className={`neo-badge ${SUBJECT_BG_COLORS[teacherInfo.subject]} px-3 py-1 rounded-full text-lg`}>
-              {teacherInfo.subject}
-            </span>
-            <div>
-              <CardTitle>{getTeacherDisplayName(selectedTeacher)}</CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
-                주 {teacherInfo.weeklyHours}시간 | 담당: {teacherInfo.targetGrades}
-              </p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <span className={`neo-badge ${SUBJECT_BG_COLORS[teacherInfo.subject]} px-3 py-1 rounded-full text-lg`}>
+                {teacherInfo.subject}
+              </span>
+              <div>
+                <CardTitle>{getTeacherDisplayName(selectedTeacher)}</CardTitle>
+                <p className="text-sm text-gray-600 mt-1">
+                  주 {teacherInfo.weeklyHours}시간 | 담당: {teacherInfo.targetGrades}
+                </p>
+              </div>
             </div>
+            {user?.isAdmin && (
+              <div className="flex gap-2">
+                {isEditMode ? (
+                  <>
+                    <button
+                      onClick={handleCancel}
+                      className="neo-button px-4 py-2 bg-gray-200 border-2 border-black rounded-lg font-bold shadow-neo-sm hover:shadow-neo-pressed hover:translate-x-0.5 hover:translate-y-0.5 transition-all"
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      className="neo-button px-4 py-2 bg-neo-lime-300 border-2 border-black rounded-lg font-bold shadow-neo-sm hover:shadow-neo-pressed hover:translate-x-0.5 hover:translate-y-0.5 transition-all"
+                    >
+                      저장
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setIsEditMode(true)}
+                    className="neo-button px-4 py-2 bg-neo-yellow-300 border-2 border-black rounded-lg font-bold shadow-neo-sm hover:shadow-neo-pressed hover:translate-x-0.5 hover:translate-y-0.5 transition-all flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    편집
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent>
-          <TeacherScheduleTable
-            teacherId={selectedTeacher}
-            schedule={scheduleData[selectedTeacher]}
-          />
+          {isEditMode ? (
+            <EditableTeacherScheduleTable
+              teacherId={selectedTeacher}
+              schedule={scheduleData[selectedTeacher]}
+              isEditMode={isEditMode}
+              onCellChange={handleCellChange}
+            />
+          ) : (
+            <TeacherScheduleTable
+              teacherId={selectedTeacher}
+              schedule={scheduleData[selectedTeacher]}
+            />
+          )}
         </CardContent>
       </Card>
 
