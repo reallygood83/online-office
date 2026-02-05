@@ -7,6 +7,7 @@ import {
   SUBJECT_COLORS, 
   GRADE_CLASS_CONFIG,
   getTeacherTargetClasses,
+  getClassesByGrades,
   SpecialTeacher,
 } from '@/types';
 import { getClasses, getTeachers, updateTeacherInfo, updateTeacherRealName } from '@/lib/firebase/firestore';
@@ -62,13 +63,31 @@ function TeachersPageContent() {
         ]);
         
         const updatedSpecial: SpecialTeacherWithName[] = SPECIAL_TEACHERS.map(t => {
-          const firestoreT = firestoreTeachers.find(ft => ft.id === t.id);
+          // Cast firestore data to include targetGrades which might be stored as string
+          const firestoreT = firestoreTeachers.find(ft => ft.id === t.id) as (SpecialTeacher & { targetGrades?: string }) | undefined;
+          
+          let weeklyHours: number = t.weeklyHours;
+          let targetGrades: number[] = [...t.targetGrades];
+          let subject: string = t.subject;
+          
+          if (firestoreT) {
+            if (firestoreT.weeklyHours) weeklyHours = firestoreT.weeklyHours;
+            if (firestoreT.subject) subject = firestoreT.subject;
+            if (firestoreT.targetGrades) {
+              // Parse targetGrades from string "1, 3, 5학년" to number[] [1, 3, 5]
+              const matches = String(firestoreT.targetGrades).match(/\d+/g);
+              if (matches) {
+                targetGrades = matches.map(Number);
+              }
+            }
+          }
+
           return { 
             id: t.id, 
-            subject: t.subject, 
+            subject, 
             additionalSubjects: firestoreT?.additionalSubjects || [],
-            weeklyHours: t.weeklyHours, 
-            targetGrades: [...t.targetGrades],
+            weeklyHours, 
+            targetGrades,
             name: firestoreT?.name || '' 
           };
         });
@@ -251,7 +270,7 @@ function TeachersPageContent() {
                     </thead>
                     <tbody>
                       {teachers.map((teacher) => {
-                        const targetClasses = getTeacherTargetClasses(teacher.id);
+                        const targetClasses = getClassesByGrades(teacher.targetGrades);
                         
                         return (
                           <tr key={teacher.id} className="border-b-2 border-gray-200 hover:bg-gray-50">
