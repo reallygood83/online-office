@@ -7,6 +7,7 @@ import { SemesterSelector } from '@/components/schedule/SemesterSelector';
 import { useTeacherNames } from '@/lib/hooks/useTeacherNames';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { saveTeacherSchedule, getTeacherDocFromDB } from '@/lib/firebase/scheduleService';
+import { getTeacherInfoOverrides } from '@/lib/firebase/firestore';
 import { downloadTeacherSchedulesExcel } from '@/lib/excelExport';
 import { DayOfWeek, DEFAULT_SCHEDULES, TeacherInfoData } from '@/types';
 import {
@@ -33,19 +34,16 @@ export default function TeacherSchedulePage() {
   useEffect(() => {
     const loadAllSchedules = async () => {
       const schedules: Record<string, TeacherScheduleData> = {};
-      const infoOverrides: Record<string, Partial<TeacherInfoData>> = {};
+      const teacherInfoFromDB = await getTeacherInfoOverrides();
       
       for (const teacherId of TEACHERS) {
         const doc = await getTeacherDocFromDB(teacherId, semester);
         if (doc) {
           schedules[teacherId] = doc.schedule;
-          if (doc.info) {
-            infoOverrides[teacherId] = doc.info;
-          }
         }
       }
       setLoadedSchedules(schedules);
-      setTeacherInfoOverrides(infoOverrides);
+      setTeacherInfoOverrides(teacherInfoFromDB);
     };
     loadAllSchedules();
     setEditedSchedules({});
