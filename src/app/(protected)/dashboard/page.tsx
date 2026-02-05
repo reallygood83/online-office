@@ -1,11 +1,47 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@/components/ui';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { getTeachers, getClasses } from '@/lib/firebase/firestore';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [stats, setStats] = useState({
+    totalClasses: 32,
+    totalTeachers: 0,
+    totalHours: 0,
+    semester: '1학기',
+  });
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        const [teachers, classes] = await Promise.all([
+          getTeachers(),
+          getClasses(),
+        ]);
+
+        // Calculate total hours from teacher info
+        let totalHours = 0;
+        teachers.forEach((teacher) => {
+          totalHours += teacher.weeklyHours || 0;
+        });
+
+        setStats({
+          totalClasses: classes.length,
+          totalTeachers: teachers.length,
+          totalHours,
+          semester: '1학기',
+        });
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      }
+    };
+
+    loadDashboardData();
+  }, []);
 
   const quickLinks = [
     {
@@ -52,11 +88,11 @@ export default function DashboardPage() {
     },
   ];
 
-  const stats = [
-    { label: '총 학급 수', value: '32', icon: '🏫' },
-    { label: '전담교사', value: '8', icon: '👨‍🏫' },
-    { label: '주간 전담시수', value: '156', icon: '📅' },
-    { label: '학기', value: '1학기', icon: '📆' },
+  const statsDisplay = [
+    { label: '총 학급 수', value: stats.totalClasses.toString(), icon: '🏫' },
+    { label: '전담교사', value: stats.totalTeachers.toString(), icon: '👨‍🏫' },
+    { label: '주간 전담시수', value: stats.totalHours.toString(), icon: '📅' },
+    { label: '학기', value: stats.semester, icon: '📆' },
   ];
 
   return (
@@ -76,7 +112,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((stat) => (
+        {statsDisplay.map((stat) => (
           <Card key={stat.label} className="text-center">
             <div className="text-3xl mb-2">{stat.icon}</div>
             <div className="text-2xl font-extrabold">{stat.value}</div>
