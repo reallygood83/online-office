@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui';
@@ -16,6 +17,18 @@ interface HeaderProps {
 
 export function Header({ user, onLogout }: HeaderProps) {
   const pathname = usePathname();
+  const [isCurriculumOpen, setIsCurriculumOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsCurriculumOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navItems = [
     { href: '/dashboard', label: '대시보드' },
@@ -25,6 +38,14 @@ export function Header({ user, onLogout }: HeaderProps) {
     { href: '/classes', label: '학급 관리' },
     { href: '/reservation', label: '특별실 예약' },
     { href: '/calendar', label: '학사일정' },
+  ];
+
+  const curriculumItems = [
+    { href: '/curriculum/vision', label: '2026 교육과정비전' },
+    { href: '/curriculum/calendar', label: '연간학사일정' },
+    { href: '/curriculum/guidelines', label: '교육과정 편성 유의점' },
+    { href: '/curriculum/cross-subject', label: '범교과 시수편성' },
+    { href: '/curriculum/activities', label: '교육활동 반영계획' },
   ];
 
   const isActive = (href: string) => pathname.startsWith(href);
@@ -44,7 +65,64 @@ export function Header({ user, onLogout }: HeaderProps) {
           {user && (
             <div className="flex items-center gap-4">
               <nav className="hidden md:flex items-center gap-2">
-                {navItems.map((item) => (
+                <Link
+                  href="/dashboard"
+                  className={`
+                    px-3 py-2 rounded-lg font-bold text-sm transition-all
+                    ${isActive('/dashboard') && !pathname.startsWith('/curriculum')
+                      ? 'bg-[#1A1A2E] text-white'
+                      : 'hover:bg-[#1A1A2E]/10'
+                    }
+                  `}
+                >
+                  대시보드
+                </Link>
+
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsCurriculumOpen(!isCurriculumOpen)}
+                    className={`
+                      px-3 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-1
+                      ${pathname.startsWith('/curriculum')
+                        ? 'bg-[#1A1A2E] text-white'
+                        : 'hover:bg-[#1A1A2E]/10'
+                      }
+                    `}
+                  >
+                    교육과정
+                    <svg
+                      className={`w-4 h-4 transition-transform ${isCurriculumOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {isCurriculumOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-56 bg-white border-3 border-[#1A1A2E] rounded-xl shadow-[4px_4px_0px_0px_#1A1A2E] z-50 overflow-hidden">
+                      {curriculumItems.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setIsCurriculumOpen(false)}
+                          className={`
+                            block px-4 py-3 font-semibold text-sm transition-all border-b border-[#1A1A2E]/10 last:border-b-0
+                            ${pathname === item.href
+                              ? 'bg-[#1A1A2E] text-white'
+                              : 'hover:bg-[#FFE135] text-[#1A1A2E]'
+                            }
+                          `}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {navItems.slice(1).map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}

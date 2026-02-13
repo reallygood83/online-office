@@ -342,5 +342,115 @@ export interface TeacherInfoData {
   subject: string;
   weeklyHours: number;
   targetGrades: string;
-  additionalSubjects?: string[];  // 다과목 지원
+  additionalSubjects?: string[];
 }
+
+// ========== CURRICULUM - CROSS SUBJECT ==========
+export type Grade = 1 | 2 | 3 | 4 | 5 | 6;
+export type Semester = 1 | 2;
+export type InputType = 'gyo' | 'chang';
+
+export interface GradeHours {
+  sem1_gyo: number;
+  sem1_chang: number;
+  sem2_gyo: number;
+  sem2_chang: number;
+}
+
+export interface SafetyEducationItem {
+  id: string;
+  name: string;
+  hoursInfo: string;
+  isRequired: boolean;
+  grades: Record<Grade, GradeHours>;
+}
+
+export interface SafetyEducationSection {
+  id: number;
+  name: string;
+  color: string;
+  hoursDescription: string;
+  items: SafetyEducationItem[];
+}
+
+export interface OptionalEducationItem {
+  id: string;
+  name: string;
+  type: 'mandatory' | 'recommended';
+  checked: boolean;
+}
+
+export interface CrossSubjectCurriculumData {
+  year: number;
+  sections: SafetyEducationSection[];
+  optionalItems: OptionalEducationItem[];
+  updatedAt?: any;
+  updatedBy?: string;
+}
+
+export const SAFETY_EDUCATION_SECTIONS: Omit<SafetyEducationSection, 'items'>[] = [
+  { id: 1, name: '생활안전', color: 'blue', hoursDescription: '12시간, 학기당 2회 이상' },
+  { id: 2, name: '교통안전', color: 'green', hoursDescription: '11시간, 학기당 3회 이상' },
+  { id: 3, name: '폭력예방 및 신변보호', color: 'orange', hoursDescription: '8시간, 학기당 2회 이상' },
+  { id: 4, name: '약물 및 사이버 중독 예방', color: 'red', hoursDescription: '약물5+사이버5, 학기당 2회 이상' },
+  { id: 5, name: '재난안전', color: 'purple', hoursDescription: '6시간, 학기당 2회 이상' },
+  { id: 6, name: '직업안전', color: 'teal', hoursDescription: '2시간' },
+  { id: 7, name: '응급처치', color: 'gray', hoursDescription: '2시간' },
+];
+
+export const SECTION_ITEMS_CONFIG: Record<number, { name: string; info: string; required: boolean }[]> = {
+  1: [
+    { name: '실종·유괴의 예방·방지 교육', info: '3개월 1회+ (연간 10시간+)', required: true },
+    { name: '건강한 식생활 및 영양교육', info: '연 2회 이상', required: false },
+    { name: '과학실 안전교육', info: '학교에서 정하여 반영(의무)', required: false },
+    { name: '학생생존수영교육 (물놀이 안전)', info: '3학년(10차시+), 4학년(6차시+)', required: false },
+    { name: '그 외 생활안전교육 (PM 포함)', info: '자전거, 전동킥보드 등 필수', required: false },
+  ],
+  2: [
+    { name: '교통안전교육', info: '2개월 1회+ (연간 10시간+) ★11시간', required: true },
+  ],
+  3: [
+    { name: '학교폭력예방교육', info: '연 2회 11시간 *사이버폭력 3차시+', required: false },
+    { name: '가정폭력예방교육', info: '매년 1회 1시간 이상', required: false },
+    { name: '성폭력 예방교육', info: '6개월 1회+ (연간 4시간+)', required: true },
+    { name: '아동학대 예방교육', info: '6개월 1회+ (연간 4시간+)', required: true },
+    { name: '생명존중 및 자살예방교육', info: '(교육부) 연간 6시간+ 의무', required: false },
+  ],
+  4: [
+    { name: '인터넷·스마트폰과의존예방', info: '학기별 1회+ *사이버중독 5시간', required: false },
+    { name: '감염병 및 약물 오용·남용 예방', info: '3개월 1회+ (연간 10시간+)', required: true },
+  ],
+  5: [
+    { name: '재난대비안전교육', info: '6개월 1회+ (연간 6시간+) *비상훈련2종+', required: true },
+  ],
+  6: [
+    { name: '직업안전교육', info: '학기당 1회 이상', required: false },
+  ],
+  7: [
+    { name: '응급처치교육', info: '학기당 1회 이상', required: false },
+  ],
+};
+
+export const OPTIONAL_EDUCATION_ITEMS: Omit<OptionalEducationItem, 'checked'>[] = [
+  { id: 'play', name: '놀이 활동 활성화', type: 'mandatory' },
+  { id: 'population', name: '인구교육', type: 'mandatory' },
+  { id: 'culture', name: '문화예술교육', type: 'recommended' },
+  { id: 'democracy', name: '민주시민교육 *선거교육', type: 'recommended' },
+  { id: 'economy', name: '경제·금융 교육 *학교급별 1개 학년', type: 'recommended' },
+  { id: 'invention', name: '발명교육', type: 'recommended' },
+  { id: 'maker', name: '메이커교육', type: 'recommended' },
+  { id: 'korean', name: '올바른 국어 사용 교육', type: 'recommended' },
+  { id: 'family', name: '다양한 가족 형태에 대한 사회적 인식 개선 교육', type: 'recommended' },
+  { id: 'steam', name: 'STEAM교육', type: 'recommended' },
+];
+
+export const SECTION_COLORS: Record<string, string> = {
+  blue: 'bg-[#3498db]',
+  green: 'bg-[#27ae60]',
+  orange: 'bg-[#e67e22]',
+  red: 'bg-[#e74c3c]',
+  purple: 'bg-[#9b59b6]',
+  teal: 'bg-[#1abc9c]',
+  gray: 'bg-[#7f8c8d]',
+  pink: 'bg-[#e91e63]',
+};
