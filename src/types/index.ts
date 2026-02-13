@@ -454,3 +454,33 @@ export const SECTION_COLORS: Record<string, string> = {
   gray: 'bg-[#7f8c8d]',
   pink: 'bg-[#e91e63]',
 };
+
+export interface CurriculumScheduleItem {
+  id: string;
+  month: number;
+  startDate: string;
+  endDate?: string;
+  activityName: string;
+  gradeHours: {
+    grade1: number | null;
+    grade2: number | null;
+    grade3: number | null;
+    grade4: number | null;
+    grade5: number | null;
+    grade6: number | null;
+  };
+  subject: string;
+  notes?: string;
+  linkedEventId?: string;
+  year: number;
+  createdAt?: any;
+  updatedAt?: any;
+  updatedBy?: string;
+}
+
+export const MONTHS = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2] as const;
+
+export const MONTH_LABELS: Record<number, string> = {
+  1: '1월', 2: '2월', 3: '3월', 4: '4월', 5: '5월', 6: '6월',
+  7: '7월', 8: '8월', 9: '9월', 10: '10월', 11: '11월', 12: '12월',
+};
