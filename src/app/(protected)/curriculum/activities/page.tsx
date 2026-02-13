@@ -17,7 +17,7 @@ const GRADES = [1, 2, 3, 4, 5, 6] as const;
 const CURRENT_YEAR = 2026;
 
 export default function CurriculumActivitiesPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [items, setItems] = useState<CurriculumScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,24 +90,25 @@ export default function CurriculumActivitiesPage() {
       return;
     }
 
-    if (!user) {
-      alert('로그인이 필요합니다.');
+    if (!user?.uid) {
+      alert('로그인이 필요합니다. 페이지를 새로고침 해주세요.');
       return;
     }
 
+    const userId = user.uid;
     setSaving(true);
     try {
       if (editingItem) {
         await updateCurriculumScheduleItem(editingItem.id, {
           ...formData,
           endDate: formData.endDate || undefined,
-        }, user.uid);
+        }, userId);
       } else {
         await addCurriculumScheduleItem({
           ...formData,
           endDate: formData.endDate || undefined,
           year: CURRENT_YEAR,
-        }, user.uid);
+        }, userId);
       }
       await loadItems();
       setIsModalOpen(false);
@@ -136,8 +137,8 @@ export default function CurriculumActivitiesPage() {
   };
 
   const handleInitializeData = async () => {
-    if (!user) {
-      alert('로그인이 필요합니다.');
+    if (!user?.uid) {
+      alert('로그인이 필요합니다. 페이지를 새로고침 해주세요.');
       return;
     }
 
@@ -145,13 +146,14 @@ export default function CurriculumActivitiesPage() {
       return;
     }
 
+    const userId = user.uid;
     setSaving(true);
     try {
       for (const item of INITIAL_SCHEDULE_DATA) {
         await addCurriculumScheduleItem({
           ...item,
           year: CURRENT_YEAR,
-        }, user.uid);
+        }, userId);
       }
       await loadItems();
       alert('초기 데이터가 생성되었습니다.');
@@ -187,7 +189,7 @@ export default function CurriculumActivitiesPage() {
     }));
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
