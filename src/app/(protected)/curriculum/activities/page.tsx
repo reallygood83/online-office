@@ -16,7 +16,7 @@ import { MONTHS, MONTH_LABELS } from '@/types';
 
 const GRADES = [1, 2, 3, 4, 5, 6] as const;
 
-export default function CurriculumCalendarPage() {
+export default function CurriculumActivitiesPage() {
   const { user } = useAuth();
   const [items, setItems] = useState<CurriculumScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +27,7 @@ export default function CurriculumCalendarPage() {
   const [formData, setFormData] = useState<Omit<CurriculumScheduleItem, 'id'>>(
     createEmptyScheduleItem(2026, 3)
   );
+  const [initializing, setInitializing] = useState(false);
 
   const currentYear = 2026;
 
@@ -108,20 +109,20 @@ export default function CurriculumCalendarPage() {
 
   const handleInitializeData = async () => {
     if (!user) return;
-    if (!confirm('초기 데이터를 불러오시겠습니까?\n기존 데이터가 있으면 중복될 수 있습니다.')) return;
+    if (!confirm('PDF 데이터를 기반으로 45개 일정을 불러오시겠습니까?')) return;
 
-    setSaving(true);
+    setInitializing(true);
     try {
       for (const item of INITIAL_SCHEDULE_DATA) {
         await addCurriculumScheduleItem({ ...item, year: currentYear }, user.uid);
       }
       await loadItems();
-      alert('초기 데이터가 추가되었습니다.');
+      alert('✅ 초기 데이터가 추가되었습니다!\n학사일정 캘린더에도 자동 연동되었습니다.');
     } catch (error) {
       console.error('Failed to initialize:', error);
       alert('초기화에 실패했습니다.');
     } finally {
-      setSaving(false);
+      setInitializing(false);
     }
   };
 
@@ -161,13 +162,13 @@ export default function CurriculumCalendarPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black">📅 연간학사일정</h1>
-          <p className="text-gray-600 mt-1">{currentYear}학년도 교육활동 반영계획</p>
+          <h1 className="text-3xl font-black">📋 교육활동 반영계획</h1>
+          <p className="text-gray-600 mt-1">{currentYear}학년도 학교 교육활동 일정표</p>
         </div>
         <div className="flex gap-2">
           {items.length === 0 && (
-            <Button variant="secondary" onClick={handleInitializeData} disabled={saving}>
-              📥 초기 데이터 불러오기
+            <Button variant="secondary" onClick={handleInitializeData} disabled={initializing}>
+              {initializing ? '불러오는 중...' : '📥 초기 데이터 불러오기'}
             </Button>
           )}
           <Button onClick={handleAddNew}>+ 일정 추가</Button>
