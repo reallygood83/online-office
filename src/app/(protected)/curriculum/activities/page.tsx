@@ -136,15 +136,7 @@ export default function CurriculumActivitiesPage() {
   };
 
   const handleInitializeData = async () => {
-    console.log('[DEBUG] handleInitializeData called');
-    console.log('[DEBUG] firebaseUser:', firebaseUser);
-    console.log('[DEBUG] firebaseUser?.uid:', firebaseUser?.uid);
-    console.log('[DEBUG] user:', user);
-    console.log('[DEBUG] user?.uid:', user?.uid);
-    
     const userId = firebaseUser?.uid || user?.uid;
-    console.log('[DEBUG] resolved userId:', userId);
-    
     if (!userId) {
       alert('로그인이 필요합니다. 페이지를 새로고침 해주세요.');
       return;
@@ -155,7 +147,6 @@ export default function CurriculumActivitiesPage() {
     }
     setSaving(true);
     try {
-      console.log('[DEBUG] Starting to create items with userId:', userId);
       for (const item of INITIAL_SCHEDULE_DATA) {
         await addCurriculumScheduleItem({
           ...item,
@@ -165,7 +156,7 @@ export default function CurriculumActivitiesPage() {
       await loadItems();
       alert('초기 데이터가 생성되었습니다.');
     } catch (error) {
-      console.error('[DEBUG] Failed to initialize data:', error);
+      console.error('Failed to initialize data:', error);
       alert(`초기화에 실패했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
     } finally {
       setSaving(false);
