@@ -210,7 +210,7 @@ function AutonomousTab() {
           <p className="font-bold text-sm mb-2">성장을 나누고 꿈을 펼치는 &apos;박달 예술꽃 무대&apos;</p>
           <div className="text-xs space-y-1 text-gray-700">
             <p>• 대상: 1~6학년 전체</p>
-            <p>• 예산: 3,840천원</p>
+            <p>• 예산: 3,840천원 <span className="font-black text-[#9C27B0]">(학급당 12만원 지원)</span></p>
             <p>• 목적: 예술 활동 성과 공유 및 발표 기회 제공</p>
           </div>
         </div>
@@ -224,11 +224,11 @@ function AutonomousTab() {
             <p className="text-xs">총 예산</p>
           </div>
           <div className="bg-white/10 p-3 rounded-lg">
-            <p className="text-[#FF6B6B] font-black text-lg">59.4%</p>
+            <p className="text-[#FF6B6B] font-black text-lg">68.8%</p>
             <p className="text-xs">강사비</p>
           </div>
           <div className="bg-white/10 p-3 rounded-lg">
-            <p className="text-[#4ECDC4] font-black text-lg">40.6%</p>
+            <p className="text-[#4ECDC4] font-black text-lg">31.2%</p>
             <p className="text-xs">운영비</p>
           </div>
         </div>
