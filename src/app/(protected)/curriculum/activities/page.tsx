@@ -17,7 +17,7 @@ const GRADES = [1, 2, 3, 4, 5, 6] as const;
 const CURRENT_YEAR = 2026;
 
 export default function CurriculumActivitiesPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, firebaseUser, loading: authLoading } = useAuth();
   const [items, setItems] = useState<CurriculumScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,12 +90,11 @@ export default function CurriculumActivitiesPage() {
       return;
     }
 
-    if (!user?.uid) {
+    const userId = firebaseUser?.uid || user?.uid;
+    if (!userId) {
       alert('로그인이 필요합니다. 페이지를 새로고침 해주세요.');
       return;
     }
-
-    const userId = user.uid;
     setSaving(true);
     try {
       if (editingItem) {
@@ -137,7 +136,8 @@ export default function CurriculumActivitiesPage() {
   };
 
   const handleInitializeData = async () => {
-    if (!user?.uid) {
+    const userId = firebaseUser?.uid || user?.uid;
+    if (!userId) {
       alert('로그인이 필요합니다. 페이지를 새로고침 해주세요.');
       return;
     }
@@ -145,8 +145,6 @@ export default function CurriculumActivitiesPage() {
     if (!confirm('초기 데이터(45개 일정)를 생성하시겠습니까?\n기존 데이터가 없을 때만 사용하세요.')) {
       return;
     }
-
-    const userId = user.uid;
     setSaving(true);
     try {
       for (const item of INITIAL_SCHEDULE_DATA) {
