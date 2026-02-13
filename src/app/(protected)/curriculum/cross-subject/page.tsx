@@ -34,7 +34,7 @@ const GRADE_BANDS: { id: GradeBand; label: string; grades: [Grade, Grade] }[] = 
 ];
 
 export default function CrossSubjectCurriculumPage() {
-  const { user } = useAuth();
+  const { user, firebaseUser } = useAuth();
   const [data, setData] = useState<CrossSubjectCurriculumData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -68,10 +68,14 @@ export default function CrossSubjectCurriculumPage() {
   };
 
   const handleSave = async () => {
-    if (!data || !user) return;
+    const userId = firebaseUser?.uid || user?.uid;
+    if (!data || !userId) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
     setSaving(true);
     try {
-      await saveCrossSubjectData(data, user.uid);
+      await saveCrossSubjectData(data, userId);
       setHasChanges(false);
       alert('저장되었습니다!');
     } catch (error) {

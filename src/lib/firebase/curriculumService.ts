@@ -76,6 +76,9 @@ export const saveCrossSubjectData = async (
   data: CrossSubjectCurriculumData,
   userId: string
 ): Promise<void> => {
+  if (!userId) {
+    throw new Error('userId is required');
+  }
   const docRef = doc(db, COLLECTION_NAME, `${CROSS_SUBJECT_DOC}_${data.year}`);
   await setDoc(docRef, {
     ...data,
