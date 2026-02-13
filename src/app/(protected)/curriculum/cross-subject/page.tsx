@@ -141,13 +141,23 @@ export default function CrossSubjectCurriculumPage() {
           <h1 className="text-3xl font-black">📋 범교과 시수 편성표</h1>
           <p className="text-gray-600 mt-1">{currentYear}학년도 기준 | 경기도교육청</p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={saving || !hasChanges}
-          variant={hasChanges ? 'primary' : 'secondary'}
-        >
-          {saving ? '저장 중...' : hasChanges ? '💾 변경사항 저장' : '✓ 저장됨'}
-        </Button>
+        <div className="flex gap-2">
+          <a
+            href="https://share.note.sx/te8u2og2"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-[#4ECDC4] text-white font-bold rounded-xl border-3 border-[#1A1A2E] shadow-[4px_4px_0px_#1A1A2E] hover:shadow-[2px_2px_0px_#1A1A2E] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+          >
+            📖 매뉴얼 보기
+          </a>
+          <Button
+            onClick={handleSave}
+            disabled={saving || !hasChanges}
+            variant={hasChanges ? 'primary' : 'secondary'}
+          >
+            {saving ? '저장 중...' : hasChanges ? '💾 변경사항 저장' : '✓ 저장됨'}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
