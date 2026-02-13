@@ -11,10 +11,17 @@ import {
   formatDateKorean,
   type AnnualCalendarData,
   type AcademicEvent,
-  type SchoolDays,
 } from '@/lib/firebase/annualCalendarService';
 
 const CURRENT_YEAR = 2026;
+
+type TabType = 'schedule' | 'timetable' | 'weeklyHours';
+
+const TABS: { id: TabType; label: string; icon: string }[] = [
+  { id: 'schedule', label: '학사일정', icon: '📅' },
+  { id: 'timetable', label: '시정표', icon: '⏰' },
+  { id: 'weeklyHours', label: '요일별 시수', icon: '📊' },
+];
 
 export default function AnnualCalendarPage() {
   const { user, firebaseUser } = useAuth();
@@ -22,6 +29,7 @@ export default function AnnualCalendarPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('schedule');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AcademicEvent | null>(null);
   const [formData, setFormData] = useState({
@@ -214,16 +222,18 @@ export default function AnnualCalendarPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black">📅 {CURRENT_YEAR}학년도 학사일정</h1>
-          <p className="text-gray-600 mt-1">연간 주요 학사일정 및 수업일수 현황</p>
+          <p className="text-gray-600 mt-1">연간 주요 학사일정, 시정표, 요일별 시수</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            onClick={handleSyncToCalendar}
-            disabled={saving}
-          >
-            🔄 캘린더 동기화
-          </Button>
+          {activeTab === 'schedule' && (
+            <Button
+              variant="secondary"
+              onClick={handleSyncToCalendar}
+              disabled={saving}
+            >
+              🔄 캘린더 동기화
+            </Button>
+          )}
           <Button
             onClick={handleSave}
             disabled={saving || !hasChanges}
@@ -235,164 +245,38 @@ export default function AnnualCalendarPage() {
       </div>
 
       <Card className="p-0 overflow-hidden">
-        <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white px-4 py-3 flex justify-between items-center">
-          <span className="font-bold text-lg">📋 주요 학사일정</span>
-          <Button variant="secondary" onClick={handleAddEvent} className="!py-1 !px-3 !text-sm">
-            + 행사 추가
-          </Button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border-2 border-[#1A1A2E] px-4 py-3 text-left min-w-[150px]">행 사 명</th>
-                <th className="border-2 border-[#1A1A2E] px-4 py-3 text-center min-w-[300px]">날 짜</th>
-                <th className="border-2 border-[#1A1A2E] px-4 py-3 text-center min-w-[200px]">비 고</th>
-                <th className="border-2 border-[#1A1A2E] px-4 py-3 text-center w-20">관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.events.map((event) => (
-                <tr key={event.id} className="hover:bg-gray-50">
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 font-medium">{event.name}</td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center">
-                    {formatDateKorean(event.date)}
-                    {event.time && ` ${event.time}`}
-                    {event.endDate && ` - ${formatDateKorean(event.endDate)}`}
-                  </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center text-gray-600">
-                    {event.notes || '-'}
-                  </td>
-                  <td className="border-2 border-[#1A1A2E] px-2 py-2 text-center">
-                    <button
-                      onClick={() => handleEditEvent(event)}
-                      className="px-2 py-1 bg-[#FFE135] rounded-lg font-bold text-xs hover:bg-[#FFD700] transition-all border-2 border-[#1A1A2E]"
-                    >
-                      수정
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="flex border-b-3 border-[#1A1A2E]">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`
+                flex-1 px-6 py-4 font-bold text-lg transition-all flex items-center justify-center gap-2
+                ${activeTab === tab.id
+                  ? 'bg-[#1A1A2E] text-white'
+                  : 'bg-gray-100 hover:bg-gray-200 text-[#1A1A2E]'
+                }
+              `}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
       </Card>
 
-      <Card className="p-0 overflow-hidden">
-        <div className="bg-gradient-to-r from-[#f093fb] to-[#f5576c] text-white px-4 py-3">
-          <span className="font-bold text-lg">📊 수업일수 현황</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-100">
-                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 w-20">구분</th>
-                <th colSpan={5} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#e3f2fd]">1학기</th>
-                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#fff9c4] w-16">계</th>
-                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#ffecb3] w-20">학교장<br/>재량일수</th>
-                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#c8e6c9] w-20">총수업<br/>일수</th>
-              </tr>
-              <tr className="bg-gray-50">
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">3월</th>
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">4월</th>
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">5월</th>
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">6월</th>
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">7월</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border-2 border-[#1A1A2E] px-3 py-2 font-bold text-center bg-[#e3f2fd]">1학기</td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester1.march} onChange={(v) => handleSchoolDaysChange('semester1', 'march', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester1.april} onChange={(v) => handleSchoolDaysChange('semester1', 'april', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester1.may} onChange={(v) => handleSchoolDaysChange('semester1', 'may', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester1.june} onChange={(v) => handleSchoolDaysChange('semester1', 'june', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester1.july} onChange={(v) => handleSchoolDaysChange('semester1', 'july', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] px-3 py-2 text-center font-bold bg-[#fff9c4]">
-                  {data.schoolDays.semester1.total}
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester1.discretionaryDays} onChange={(v) => handleSchoolDaysChange('semester1', 'discretionaryDays', v)} />
-                </td>
-                <td rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 text-center font-black text-xl bg-[#c8e6c9]">
-                  {data.schoolDays.totalSchoolDays}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      {activeTab === 'schedule' && (
+        <ScheduleTab
+          data={data}
+          onAddEvent={handleAddEvent}
+          onEditEvent={handleEditEvent}
+          onSchoolDaysChange={handleSchoolDaysChange}
+        />
+      )}
 
-          <table className="w-full text-sm mt-2">
-            <thead>
-              <tr className="bg-gray-100">
-                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 w-20">구분</th>
-                <th colSpan={7} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#fce4ec]">2학기</th>
-                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#fff9c4] w-16">계</th>
-                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#ffecb3] w-20">학교장<br/>재량일수</th>
-              </tr>
-              <tr className="bg-gray-50">
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">8월</th>
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">9월</th>
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">10월</th>
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">11월</th>
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">12월</th>
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">1월</th>
-                <th className="border-2 border-[#1A1A2E] px-2 py-1">2월</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border-2 border-[#1A1A2E] px-3 py-2 font-bold text-center bg-[#fce4ec]">2학기</td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester2.august} onChange={(v) => handleSchoolDaysChange('semester2', 'august', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester2.september} onChange={(v) => handleSchoolDaysChange('semester2', 'september', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester2.october} onChange={(v) => handleSchoolDaysChange('semester2', 'october', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester2.november} onChange={(v) => handleSchoolDaysChange('semester2', 'november', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester2.december} onChange={(v) => handleSchoolDaysChange('semester2', 'december', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester2.january} onChange={(v) => handleSchoolDaysChange('semester2', 'january', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester2.february} onChange={(v) => handleSchoolDaysChange('semester2', 'february', v)} />
-                </td>
-                <td className="border-2 border-[#1A1A2E] px-3 py-2 text-center font-bold bg-[#fff9c4]">
-                  {data.schoolDays.semester2.total}
-                </td>
-                <td className="border-2 border-[#1A1A2E] p-1">
-                  <DaysInput value={data.schoolDays.semester2.discretionaryDays} onChange={(v) => handleSchoolDaysChange('semester2', 'discretionaryDays', v)} />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      {activeTab === 'timetable' && <TimetableTab />}
 
-      <Card className="bg-[#e8f4f8] border-l-4 border-[#3498db]">
-        <div className="font-bold mb-2">💡 안내</div>
-        <ul className="text-sm space-y-1 text-[#2980b9]">
-          <li>• 행사 수정 후 &quot;변경사항 저장&quot; 버튼을 클릭하세요.</li>
-          <li>• &quot;캘린더 동기화&quot; 버튼을 클릭하면 학사일정 캘린더(/calendar)에 일정이 반영됩니다.</li>
-          <li>• 수업일수는 자동으로 합계가 계산됩니다.</li>
-        </ul>
-      </Card>
+      {activeTab === 'weeklyHours' && <WeeklyHoursTab />}
 
       <Modal
         isOpen={isModalOpen}
@@ -463,6 +347,363 @@ export default function AnnualCalendarPage() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+function ScheduleTab({
+  data,
+  onAddEvent,
+  onEditEvent,
+  onSchoolDaysChange,
+}: {
+  data: AnnualCalendarData;
+  onAddEvent: () => void;
+  onEditEvent: (event: AcademicEvent) => void;
+  onSchoolDaysChange: (semester: 'semester1' | 'semester2', field: string, value: number) => void;
+}) {
+  return (
+    <>
+      <Card className="p-0 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white px-4 py-3 flex justify-between items-center">
+          <span className="font-bold text-lg">📋 주요 학사일정</span>
+          <Button variant="secondary" onClick={onAddEvent} className="!py-1 !px-3 !text-sm">
+            + 행사 추가
+          </Button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border-2 border-[#1A1A2E] px-4 py-3 text-left min-w-[150px]">행 사 명</th>
+                <th className="border-2 border-[#1A1A2E] px-4 py-3 text-center min-w-[300px]">날 짜</th>
+                <th className="border-2 border-[#1A1A2E] px-4 py-3 text-center min-w-[200px]">비 고</th>
+                <th className="border-2 border-[#1A1A2E] px-4 py-3 text-center w-20">관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.events.map((event) => (
+                <tr key={event.id} className="hover:bg-gray-50">
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 font-medium">{event.name}</td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center">
+                    {formatDateKorean(event.date)}
+                    {event.time && ` ${event.time}`}
+                    {event.endDate && ` - ${formatDateKorean(event.endDate)}`}
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center text-gray-600">
+                    {event.notes || '-'}
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-2 py-2 text-center">
+                    <button
+                      onClick={() => onEditEvent(event)}
+                      className="px-2 py-1 bg-[#FFE135] rounded-lg font-bold text-xs hover:bg-[#FFD700] transition-all border-2 border-[#1A1A2E]"
+                    >
+                      수정
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card className="p-0 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#f093fb] to-[#f5576c] text-white px-4 py-3">
+          <span className="font-bold text-lg">📊 수업일수 현황</span>
+        </div>
+        <div className="overflow-x-auto p-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-100">
+                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 w-20">구분</th>
+                <th colSpan={5} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#e3f2fd]">1학기</th>
+                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#fff9c4] w-16">계</th>
+                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#ffecb3] w-20">학교장<br/>재량일수</th>
+                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#c8e6c9] w-20">총수업<br/>일수</th>
+              </tr>
+              <tr className="bg-gray-50">
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">3월</th>
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">4월</th>
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">5월</th>
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">6월</th>
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">7월</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border-2 border-[#1A1A2E] px-3 py-2 font-bold text-center bg-[#e3f2fd]">1학기</td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester1.march} onChange={(v) => onSchoolDaysChange('semester1', 'march', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester1.april} onChange={(v) => onSchoolDaysChange('semester1', 'april', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester1.may} onChange={(v) => onSchoolDaysChange('semester1', 'may', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester1.june} onChange={(v) => onSchoolDaysChange('semester1', 'june', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester1.july} onChange={(v) => onSchoolDaysChange('semester1', 'july', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] px-3 py-2 text-center font-bold bg-[#fff9c4]">
+                  {data.schoolDays.semester1.total}
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester1.discretionaryDays} onChange={(v) => onSchoolDaysChange('semester1', 'discretionaryDays', v)} />
+                </td>
+                <td rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 text-center font-black text-xl bg-[#c8e6c9]">
+                  {data.schoolDays.totalSchoolDays}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table className="w-full text-sm mt-4">
+            <thead>
+              <tr className="bg-gray-100">
+                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 w-20">구분</th>
+                <th colSpan={7} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#fce4ec]">2학기</th>
+                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#fff9c4] w-16">계</th>
+                <th rowSpan={2} className="border-2 border-[#1A1A2E] px-3 py-2 bg-[#ffecb3] w-20">학교장<br/>재량일수</th>
+              </tr>
+              <tr className="bg-gray-50">
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">8월</th>
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">9월</th>
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">10월</th>
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">11월</th>
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">12월</th>
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">1월</th>
+                <th className="border-2 border-[#1A1A2E] px-2 py-1">2월</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border-2 border-[#1A1A2E] px-3 py-2 font-bold text-center bg-[#fce4ec]">2학기</td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester2.august} onChange={(v) => onSchoolDaysChange('semester2', 'august', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester2.september} onChange={(v) => onSchoolDaysChange('semester2', 'september', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester2.october} onChange={(v) => onSchoolDaysChange('semester2', 'october', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester2.november} onChange={(v) => onSchoolDaysChange('semester2', 'november', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester2.december} onChange={(v) => onSchoolDaysChange('semester2', 'december', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester2.january} onChange={(v) => onSchoolDaysChange('semester2', 'january', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester2.february} onChange={(v) => onSchoolDaysChange('semester2', 'february', v)} />
+                </td>
+                <td className="border-2 border-[#1A1A2E] px-3 py-2 text-center font-bold bg-[#fff9c4]">
+                  {data.schoolDays.semester2.total}
+                </td>
+                <td className="border-2 border-[#1A1A2E] p-1">
+                  <DaysInput value={data.schoolDays.semester2.discretionaryDays} onChange={(v) => onSchoolDaysChange('semester2', 'discretionaryDays', v)} />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card className="bg-[#e8f4f8] border-l-4 border-[#3498db]">
+        <div className="font-bold mb-2">💡 안내</div>
+        <ul className="text-sm space-y-1 text-[#2980b9]">
+          <li>• 행사 수정 후 &quot;변경사항 저장&quot; 버튼을 클릭하세요.</li>
+          <li>• &quot;캘린더 동기화&quot; 버튼을 클릭하면 학사일정 캘린더(/calendar)에 일정이 반영됩니다.</li>
+          <li>• 수업일수는 자동으로 합계가 계산됩니다.</li>
+        </ul>
+      </Card>
+    </>
+  );
+}
+
+function TimetableTab() {
+  return (
+    <>
+      <Card className="p-0 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#4ECDC4] to-[#556270] text-white px-4 py-3">
+          <span className="font-bold text-lg">⏰ 우리학교 시정표</span>
+        </div>
+        <div className="p-4">
+          <div className="mb-4 p-3 bg-[#fff3e0] rounded-xl border-2 border-[#ff9800] text-center">
+            <span className="font-bold text-[#e65100]">🚌 등교시간: 8:40~9:00</span>
+            <span className="text-sm text-[#f57c00] ml-2">(※ 안전사고 발생 우려가 있으므로 등교시간 준수)</span>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr>
+                  <th className="border-3 border-[#1A1A2E] px-4 py-3 bg-[#e0f7fa] min-w-[200px]">1,2,3학년</th>
+                  <th className="border-3 border-[#1A1A2E] px-4 py-3 bg-[#fffde7] min-w-[200px]">4,5,6학년</th>
+                  <th className="border-3 border-[#1A1A2E] px-4 py-3 bg-gray-100 w-20">비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
+                    <span className="font-bold">1교시</span><span className="text-gray-600">(09:00~09:40)</span>
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#fffde7]">
+                    <span className="font-bold">1교시</span><span className="text-gray-600">(09:00~09:40)</span>
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-gray-50"></td>
+                </tr>
+                <tr>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
+                    <span className="font-bold">2교시</span><span className="text-gray-600">(09:50~10:30)</span>
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#fffde7]">
+                    <span className="font-bold">2교시</span><span className="text-gray-600">(09:50~10:30)</span>
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-gray-50"></td>
+                </tr>
+                <tr>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
+                    <span className="font-bold">3교시</span><span className="text-gray-600">(10:40~11:20)</span>
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#fffde7]">
+                    <span className="font-bold">3교시</span><span className="text-gray-600">(10:40~11:20)</span>
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-gray-50"></td>
+                </tr>
+                <tr>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
+                    <span className="font-bold">4교시</span><span className="text-gray-600">(11:30~12:10)</span>
+                  </td>
+                  <td rowSpan={2} className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#fffde7]">
+                    <div className="font-bold">4교시<span className="text-gray-600">(11:30~12:10)</span></div>
+                    <div className="border-t border-dashed border-gray-400 my-2"></div>
+                    <div className="font-bold">5교시<span className="text-gray-600">(12:10~12:50)</span></div>
+                  </td>
+                  <td rowSpan={2} className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#ffcdd2] font-bold">
+                    블록<br/>수업
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 bg-[#ffcdd2]">
+                    <div className="font-bold text-center mb-2">점심시간(12:10~13:00)</div>
+                    <ul className="text-xs space-y-1 text-gray-700">
+                      <li>- 12:05~12:10 교직원</li>
+                      <li>- 12:10~12:18 1-1</li>
+                      <li>- 12:18~12:26 1-2</li>
+                      <li>- 12:26~12:35 1-3</li>
+                    </ul>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
+                    <span className="font-bold">5교시</span><span className="text-gray-600">(13:00~13:40)</span>
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 bg-[#ffcdd2]">
+                    <div className="font-bold text-center mb-2">점심시간(12:50~13:50)</div>
+                    <ul className="text-xs space-y-1 text-gray-700">
+                      <li>- 12:50~12:58 2-1</li>
+                      <li>- 12:58~13:06 2-2</li>
+                      <li>- 13:06~13:15 2-3</li>
+                    </ul>
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-gray-50"></td>
+                </tr>
+                <tr>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
+                    <span className="font-bold">6교시</span><span className="text-gray-600">(13:50~14:30)</span>
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#fffde7]">
+                    <span className="font-bold">6교시</span><span className="text-gray-600">(13:50~14:30)</span>
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-gray-50"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="bg-[#fff3e0] border-l-4 border-[#ff9800]">
+        <div className="font-bold mb-2">📌 시정표 안내</div>
+        <ul className="text-sm space-y-1 text-[#e65100]">
+          <li>• 4,5,6학년은 4-5교시를 블록수업으로 운영합니다.</li>
+          <li>• 점심시간은 학년군별로 다르게 운영됩니다.</li>
+          <li>• 급식 배식 시간을 준수해 주세요.</li>
+        </ul>
+      </Card>
+    </>
+  );
+}
+
+function WeeklyHoursTab() {
+  const weeklyHoursData = [
+    { grade: '1학년', mon: 5, tue: 5, wed: 4, thu: 5, fri: '4(5)', bgColor: '#fce4ec' },
+    { grade: '2학년', mon: 5, tue: 5, wed: 4, thu: 5, fri: 5, bgColor: '#fce4ec' },
+    { grade: '3학년', mon: 5, tue: 5, wed: 5, thu: 6, fri: 5, bgColor: '#e3f2fd' },
+    { grade: '4학년', mon: 5, tue: 5, wed: 5, thu: 6, fri: 5, bgColor: '#e3f2fd' },
+    { grade: '5학년', mon: 6, tue: 6, wed: 5, thu: 6, fri: 6, bgColor: '#e8f5e9' },
+    { grade: '6학년', mon: 6, tue: 6, wed: 5, thu: 6, fri: 6, bgColor: '#e8f5e9' },
+  ];
+
+  return (
+    <>
+      <Card className="p-0 overflow-hidden">
+        <div className="bg-gradient-to-r from-[#9C27B0] to-[#E91E63] text-white px-4 py-3">
+          <span className="font-bold text-lg">📊 요일별 시수</span>
+        </div>
+        <div className="overflow-x-auto p-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[#e0f7fa]">
+                <th className="border-3 border-[#1A1A2E] px-4 py-3 min-w-[100px]">학년</th>
+                <th className="border-3 border-[#1A1A2E] px-4 py-3">월</th>
+                <th className="border-3 border-[#1A1A2E] px-4 py-3">화</th>
+                <th className="border-3 border-[#1A1A2E] px-4 py-3">수</th>
+                <th className="border-3 border-[#1A1A2E] px-4 py-3">목</th>
+                <th className="border-3 border-[#1A1A2E] px-4 py-3">금</th>
+              </tr>
+            </thead>
+            <tbody>
+              {weeklyHoursData.map((row) => (
+                <tr key={row.grade}>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 font-bold text-center" style={{ backgroundColor: row.bgColor }}>
+                    {row.grade}
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center font-bold text-lg">{row.mon}</td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center font-bold text-lg">{row.tue}</td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center font-bold text-lg">{row.wed}</td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center font-bold text-lg">{row.thu}</td>
+                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center font-bold text-lg">{row.fri}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card className="bg-[#f3e5f5] border-l-4 border-[#9c27b0]">
+        <div className="font-bold mb-2">📌 가정학습 일수</div>
+        <p className="text-sm text-[#7b1fa2]">
+          연간 가정학습 최대 허가 일수는 <strong>20일</strong>로 운영
+        </p>
+      </Card>
+
+      <Card className="bg-[#e8f4f8] border-l-4 border-[#3498db]">
+        <div className="font-bold mb-2">💡 시수 안내</div>
+        <ul className="text-sm space-y-1 text-[#2980b9]">
+          <li>• 1학년 금요일 4(5): 격주로 4시간 또는 5시간 운영</li>
+          <li>• 저학년(1-2학년): 주당 23~24시간</li>
+          <li>• 중학년(3-4학년): 주당 26시간</li>
+          <li>• 고학년(5-6학년): 주당 29시간</li>
+        </ul>
+      </Card>
+    </>
   );
 }
 
