@@ -22,7 +22,7 @@ export default function PDFViewer({ fileUrl }: PDFViewerProps) {
 
   return (
     <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-      <div style={{ height: '800px' }}>
+      <div className="h-[60vh] md:h-[70vh] lg:h-[800px]">
         <Viewer
           fileUrl={fileUrl}
           plugins={[defaultLayoutPluginInstance]}

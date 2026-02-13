@@ -50,14 +50,14 @@ export default function Home() {
 
       <main className="flex-1 flex items-center justify-center px-4">
         <div className="max-w-4xl text-center">
-          <div className="text-8xl mb-8">🏫</div>
-          <h2 className="text-5xl font-black mb-6 leading-tight">
+          <div className="text-6xl md:text-8xl mb-6 md:mb-8">🏫</div>
+          <h2 className="text-3xl md:text-5xl font-black mb-4 md:mb-6 leading-tight">
             박달초등학교<br />
             <span className="text-[#FFE500]" style={{ textShadow: '3px 3px 0 #000' }}>
               교무실 시스템
             </span>
           </h2>
-          <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-600 mb-8 md:mb-12 max-w-2xl mx-auto px-4">
             시간표 관리, 특별실 예약, 학사일정 등<br />
             교무 업무를 한 곳에서 편리하게 관리하세요.
           </p>

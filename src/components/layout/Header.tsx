@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui';
 import { NotificationBell } from './NotificationBell';
+import { MobileMenu } from './MobileMenu';
 
 interface HeaderProps {
   user?: {
@@ -153,7 +154,7 @@ export function Header({ user, onLogout }: HeaderProps) {
                 )}
               </nav>
 
-              <div className="flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-3">
                 <NotificationBell userId={user.uid} />
                 <div className="neo-badge px-3 py-1 rounded-full bg-white">
                   {user.displayName}
@@ -161,6 +162,17 @@ export function Header({ user, onLogout }: HeaderProps) {
                 <Button variant="ghost" size="sm" onClick={onLogout}>
                   로그아웃
                 </Button>
+              </div>
+
+              {/* Mobile Menu */}
+              <div className="flex items-center gap-3 md:hidden">
+                <NotificationBell userId={user.uid} />
+                <MobileMenu
+                  user={user}
+                  navItems={navItems}
+                  curriculumItems={curriculumItems}
+                  onLogout={onLogout || (() => {})}
+                />
               </div>
             </div>
           )}
