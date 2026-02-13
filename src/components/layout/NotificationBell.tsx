@@ -22,6 +22,8 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!userId) return; // Guard: Don't run if userId is undefined
+    
     loadUnreadCount();
     const interval = setInterval(loadUnreadCount, 30000);
     return () => clearInterval(interval);
@@ -38,6 +40,8 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   }, []);
 
   async function loadUnreadCount() {
+    if (!userId) return; // Guard: Don't call API if userId is undefined
+    
     try {
       const count = await getUnreadNotificationCount(userId);
       setUnreadCount(count);

@@ -8,13 +8,13 @@ import {
   addCurriculumScheduleItem,
   updateCurriculumScheduleItem,
   deleteCurriculumScheduleItem,
-  createEmptyScheduleItem,
   INITIAL_SCHEDULE_DATA,
 } from '@/lib/firebase/curriculumScheduleService';
 import type { CurriculumScheduleItem } from '@/types';
 import { MONTHS, MONTH_LABELS } from '@/types';
 
 const GRADES = [1, 2, 3, 4, 5, 6] as const;
+const CURRENT_YEAR = 2026;
 
 export default function CurriculumActivitiesPage() {
   const { user } = useAuth();
@@ -24,34 +24,49 @@ export default function CurriculumActivitiesPage() {
   const [selectedMonth, setSelectedMonth] = useState<number>(3);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<CurriculumScheduleItem | null>(null);
-  const [formData, setFormData] = useState<Omit<CurriculumScheduleItem, 'id'>>(
-    createEmptyScheduleItem(2026, 3)
-  );
-  const [initializing, setInitializing] = useState(false);
-
-  const currentYear = 2026;
-
-  useEffect(() => {
-    loadItems();
-  }, []);
-
-  const loadItems = async () => {
-    setLoading(true);
-    try {
-      const data = await getCurriculumScheduleItems(currentYear);
-      setItems(data);
-    } catch (error) {
-      console.error('Failed to load items:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [formData, setFormData] = useState<Omit<CurriculumScheduleItem, 'id' | 'year' | 'createdAt' | 'updatedAt' | 'updatedBy' | 'linkedEventId'>>({
+    month: 3,
+    startDate: '',
+    endDate: '',
+    activityName: '',
+    gradeHours: { grade1: null, grade2: null, grade3: null, grade4: null, grade5: null, grade6: null },
+    subject: '',
+    notes: '',
+  });
 
   const filteredItems = items.filter((item) => item.month === selectedMonth);
 
+  const loadItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getCurriculumScheduleItems(CURRENT_YEAR);
+      if (data.length === 0) {
+        setItems([]);
+      } else {
+        setItems(data);
+      }
+    } catch (error) {
+      console.error('Failed to load curriculum schedule:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
+
   const handleAddNew = () => {
     setEditingItem(null);
-    setFormData(createEmptyScheduleItem(currentYear, selectedMonth));
+    setFormData({
+      month: selectedMonth,
+      startDate: '',
+      endDate: '',
+      activityName: '',
+      gradeHours: { grade1: null, grade2: null, grade3: null, grade4: null, grade5: null, grade6: null },
+      subject: '',
+      notes: '',
+    });
     setIsModalOpen(true);
   };
 
@@ -65,7 +80,6 @@ export default function CurriculumActivitiesPage() {
       gradeHours: { ...item.gradeHours },
       subject: item.subject,
       notes: item.notes || '',
-      year: item.year,
     });
     setIsModalOpen(true);
   };
@@ -75,14 +89,25 @@ export default function CurriculumActivitiesPage() {
       alert('활동명과 시작일을 입력해주세요.');
       return;
     }
-    if (!user) return;
+
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
 
     setSaving(true);
     try {
       if (editingItem) {
-        await updateCurriculumScheduleItem(editingItem.id, formData, user.uid);
+        await updateCurriculumScheduleItem(editingItem.id, {
+          ...formData,
+          endDate: formData.endDate || undefined,
+        }, user.uid);
       } else {
-        await addCurriculumScheduleItem(formData, user.uid);
+        await addCurriculumScheduleItem({
+          ...formData,
+          endDate: formData.endDate || undefined,
+          year: CURRENT_YEAR,
+        }, user.uid);
       }
       await loadItems();
       setIsModalOpen(false);
@@ -95,8 +120,9 @@ export default function CurriculumActivitiesPage() {
   };
 
   const handleDelete = async () => {
-    if (!editingItem || !confirm('이 일정을 삭제하시겠습니까?\n학사일정 캘린더에서도 함께 삭제됩니다.')) return;
+    if (!editingItem || !confirm('이 일정을 삭제하시겠습니까?')) return;
 
+    setSaving(true);
     try {
       await deleteCurriculumScheduleItem(editingItem.id);
       await loadItems();
@@ -104,34 +130,36 @@ export default function CurriculumActivitiesPage() {
     } catch (error) {
       console.error('Failed to delete:', error);
       alert('삭제에 실패했습니다.');
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleInitializeData = async () => {
-    if (!user?.uid) {
+    if (!user) {
       alert('로그인이 필요합니다.');
       return;
     }
-    if (!confirm('PDF 데이터를 기반으로 45개 일정을 불러오시겠습니까?')) return;
 
-    setInitializing(true);
+    if (!confirm('초기 데이터(45개 일정)를 생성하시겠습니까?\n기존 데이터가 없을 때만 사용하세요.')) {
+      return;
+    }
+
+    setSaving(true);
     try {
-      let successCount = 0;
       for (const item of INITIAL_SCHEDULE_DATA) {
-        try {
-          await addCurriculumScheduleItem({ ...item, year: currentYear }, user.uid);
-          successCount++;
-        } catch (e) {
-          console.error('Failed to add item:', item.activityName, e);
-        }
+        await addCurriculumScheduleItem({
+          ...item,
+          year: CURRENT_YEAR,
+        }, user.uid);
       }
       await loadItems();
-      alert(`✅ ${successCount}개 일정이 추가되었습니다!\n학사일정 캘린더에도 자동 연동되었습니다.`);
+      alert('초기 데이터가 생성되었습니다.');
     } catch (error) {
-      console.error('Failed to initialize:', error);
-      alert('초기화에 실패했습니다: ' + (error as Error).message);
+      console.error('Failed to initialize data:', error);
+      alert('초기화에 실패했습니다.');
     } finally {
-      setInitializing(false);
+      setSaving(false);
     }
   };
 
@@ -162,7 +190,10 @@ export default function CurriculumActivitiesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-xl font-bold">로딩 중...</div>
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-bounce">📋</div>
+          <p className="font-bold text-xl">교육활동 데이터 로딩 중...</p>
+        </div>
       </div>
     );
   }
@@ -172,15 +203,15 @@ export default function CurriculumActivitiesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black">📋 교육활동 반영계획</h1>
-          <p className="text-gray-600 mt-1">{currentYear}학년도 학교 교육활동 일정표</p>
+          <p className="text-gray-600 mt-1">{CURRENT_YEAR}학년도 학교 교육활동 일정표</p>
         </div>
         <div className="flex gap-2">
           {items.length === 0 && (
-            <Button variant="secondary" onClick={handleInitializeData} disabled={initializing}>
-              {initializing ? '불러오는 중...' : '📥 초기 데이터 불러오기'}
+            <Button variant="secondary" onClick={handleInitializeData} disabled={saving}>
+              {saving ? '생성 중...' : '초기 데이터 생성'}
             </Button>
           )}
-          <Button onClick={handleAddNew}>+ 일정 추가</Button>
+          <Button onClick={handleAddNew} disabled={saving}>+ 일정 추가</Button>
         </div>
       </div>
 
@@ -238,7 +269,12 @@ export default function CurriculumActivitiesPage() {
               {filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="border-2 border-[#1A1A2E] px-4 py-8 text-center text-gray-500">
-                    {selectedMonth}월 일정이 없습니다. 일정을 추가해주세요.
+                    {selectedMonth}월 일정이 없습니다.
+                    {items.length === 0 && (
+                      <div className="mt-2">
+                        <span className="text-sm">데이터가 없습니다. 위의 &quot;초기 데이터 생성&quot; 버튼을 클릭하세요.</span>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ) : (
@@ -251,10 +287,7 @@ export default function CurriculumActivitiesPage() {
                       {item.activityName}
                     </td>
                     {GRADES.map((g) => (
-                      <td
-                        key={g}
-                        className="border-2 border-[#1A1A2E] px-2 py-2 text-center"
-                      >
+                      <td key={g} className="border-2 border-[#1A1A2E] px-2 py-2 text-center">
                         {item.gradeHours[`grade${g}` as keyof typeof item.gradeHours] ?? 'ㆍ'}
                       </td>
                     ))}
@@ -268,6 +301,7 @@ export default function CurriculumActivitiesPage() {
                       <button
                         onClick={() => handleEdit(item)}
                         className="px-2 py-1 bg-[#FFE135] rounded-lg font-bold text-xs hover:bg-[#FFD700] transition-all border-2 border-[#1A1A2E]"
+                        disabled={saving}
                       >
                         수정
                       </button>
@@ -283,15 +317,15 @@ export default function CurriculumActivitiesPage() {
       <Card className="bg-[#e8f4f8] border-l-4 border-[#3498db]">
         <div className="font-bold mb-2">💡 안내</div>
         <ul className="text-sm space-y-1 text-[#2980b9]">
-          <li>• 일정을 추가/수정하면 <strong>학사일정 캘린더</strong>에 자동 반영됩니다.</li>
-          <li>• 학년별 시수가 없는 경우 'ㆍ'로 표시됩니다.</li>
+          <li>• 학년별 시수가 없는 경우 &apos;ㆍ&apos;로 표시됩니다.</li>
           <li>• 기간이 있는 일정은 시작일~종료일 형태로 표시됩니다.</li>
+          <li>• 수정된 일정은 자동으로 학사일정 캘린더와 연동됩니다.</li>
         </ul>
       </Card>
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => !saving && setIsModalOpen(false)}
         title={editingItem ? '일정 수정' : '일정 추가'}
       >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto">
@@ -301,6 +335,7 @@ export default function CurriculumActivitiesPage() {
               value={formData.activityName}
               onChange={(e) => setFormData({ ...formData, activityName: e.target.value })}
               placeholder="예: 학교폭력예방교육주간"
+              disabled={saving}
             />
           </div>
 
@@ -318,6 +353,7 @@ export default function CurriculumActivitiesPage() {
                     month: date.getMonth() + 1,
                   });
                 }}
+                disabled={saving}
               />
             </div>
             <div>
@@ -326,6 +362,7 @@ export default function CurriculumActivitiesPage() {
                 type="date"
                 value={formData.endDate || ''}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                disabled={saving}
               />
             </div>
           </div>
@@ -343,11 +380,12 @@ export default function CurriculumActivitiesPage() {
                     onChange={(e) => updateGradeHours(g, e.target.value)}
                     placeholder="ㆍ"
                     className="text-center"
+                    disabled={saving}
                   />
                 </div>
               ))}
             </div>
-            <p className="text-xs text-gray-500 mt-1">비워두면 'ㆍ'로 표시됩니다.</p>
+            <p className="text-xs text-gray-500 mt-1">비워두면 &apos;ㆍ&apos;로 표시됩니다.</p>
           </div>
 
           <div>
@@ -356,6 +394,7 @@ export default function CurriculumActivitiesPage() {
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               placeholder="예: 교과 또는 창체"
+              disabled={saving}
             />
           </div>
 
@@ -366,19 +405,20 @@ export default function CurriculumActivitiesPage() {
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="추가 설명"
               className="w-full p-3 border-3 border-black rounded-lg font-bold focus:outline-none focus:ring-4 focus:ring-[#FFE135] min-h-[60px]"
+              disabled={saving}
             />
           </div>
 
           <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
-            <Button onClick={handleSave} disabled={saving} className="flex-1">
+            <Button onClick={handleSave} className="flex-1" disabled={saving}>
               {saving ? '저장 중...' : '저장'}
             </Button>
             {editingItem && (
-              <Button variant="danger" onClick={handleDelete} className="flex-1">
-                삭제
+              <Button variant="danger" onClick={handleDelete} className="flex-1" disabled={saving}>
+                {saving ? '삭제 중...' : '삭제'}
               </Button>
             )}
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)} className="flex-1">
+            <Button variant="secondary" onClick={() => setIsModalOpen(false)} className="flex-1" disabled={saving}>
               취소
             </Button>
           </div>

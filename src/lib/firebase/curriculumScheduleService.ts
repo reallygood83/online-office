@@ -92,6 +92,10 @@ export const updateCurriculumScheduleItem = async (
   data: Partial<CurriculumScheduleItem>,
   userId: string
 ): Promise<void> => {
+  if (!userId) {
+    throw new Error('userId is required');
+  }
+
   const docRef = doc(db, COLLECTION_NAME, id);
   const docSnap = await getDoc(docRef);
 
