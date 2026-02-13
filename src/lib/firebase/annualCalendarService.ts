@@ -41,10 +41,41 @@ export interface SchoolDays {
   totalSchoolDays: number;
 }
 
+export interface TimetableSlot {
+  period: string;
+  time: string;
+  notes?: string;
+}
+
+export interface TimetableData {
+  arrivalTime: string;
+  arrivalNote: string;
+  lowerGrades: TimetableSlot[];
+  upperGrades: TimetableSlot[];
+  lunchLower: { time: string; schedule: string[] };
+  lunchUpper: { time: string; schedule: string[] };
+}
+
+export interface WeeklyHoursRow {
+  grade: string;
+  mon: number | string;
+  tue: number | string;
+  wed: number | string;
+  thu: number | string;
+  fri: number | string;
+}
+
+export interface WeeklyHoursData {
+  rows: WeeklyHoursRow[];
+  homeStudyDays: number;
+}
+
 export interface AnnualCalendarData {
   year: number;
   events: AcademicEvent[];
   schoolDays: SchoolDays;
+  timetable: TimetableData;
+  weeklyHours: WeeklyHoursData;
   updatedAt?: any;
   updatedBy?: string;
 }
@@ -88,6 +119,46 @@ const INITIAL_SCHOOL_DAYS: SchoolDays = {
   totalSchoolDays: 190,
 };
 
+const INITIAL_TIMETABLE: TimetableData = {
+  arrivalTime: '8:40~9:00',
+  arrivalNote: '안전사고 발생 우려가 있으므로 등교시간 준수',
+  lowerGrades: [
+    { period: '1교시', time: '09:00~09:40' },
+    { period: '2교시', time: '09:50~10:30' },
+    { period: '3교시', time: '10:40~11:20' },
+    { period: '4교시', time: '11:30~12:10' },
+    { period: '5교시', time: '13:00~13:40' },
+    { period: '6교시', time: '13:50~14:30' },
+  ],
+  upperGrades: [
+    { period: '1교시', time: '09:00~09:40' },
+    { period: '2교시', time: '09:50~10:30' },
+    { period: '3교시', time: '10:40~11:20' },
+    { period: '4-5교시', time: '11:30~12:50', notes: '블록수업' },
+    { period: '6교시', time: '13:50~14:30' },
+  ],
+  lunchLower: {
+    time: '12:10~13:00',
+    schedule: ['12:05~12:10 교직원', '12:10~12:18 1-1', '12:18~12:26 1-2', '12:26~12:35 1-3'],
+  },
+  lunchUpper: {
+    time: '12:50~13:50',
+    schedule: ['12:50~12:58 2-1', '12:58~13:06 2-2', '13:06~13:15 2-3'],
+  },
+};
+
+const INITIAL_WEEKLY_HOURS: WeeklyHoursData = {
+  rows: [
+    { grade: '1학년', mon: 5, tue: 5, wed: 4, thu: 5, fri: '4(5)' },
+    { grade: '2학년', mon: 5, tue: 5, wed: 4, thu: 5, fri: 5 },
+    { grade: '3학년', mon: 5, tue: 5, wed: 5, thu: 6, fri: 5 },
+    { grade: '4학년', mon: 5, tue: 5, wed: 5, thu: 6, fri: 5 },
+    { grade: '5학년', mon: 6, tue: 6, wed: 5, thu: 6, fri: 6 },
+    { grade: '6학년', mon: 6, tue: 6, wed: 5, thu: 6, fri: 6 },
+  ],
+  homeStudyDays: 20,
+};
+
 export const getAnnualCalendarData = async (year: number): Promise<AnnualCalendarData | null> => {
   const docRef = doc(db, COLLECTION_NAME, `${year}`);
   const docSnap = await getDoc(docRef);
@@ -99,7 +170,9 @@ export const getAnnualCalendarData = async (year: number): Promise<AnnualCalenda
 export const initializeAnnualCalendarData = (): AnnualCalendarData => ({
   year: 2026,
   events: INITIAL_EVENTS.map(e => ({ ...e })),
-  schoolDays: { ...INITIAL_SCHOOL_DAYS },
+  schoolDays: JSON.parse(JSON.stringify(INITIAL_SCHOOL_DAYS)),
+  timetable: JSON.parse(JSON.stringify(INITIAL_TIMETABLE)),
+  weeklyHours: JSON.parse(JSON.stringify(INITIAL_WEEKLY_HOURS)),
 });
 
 export const saveAnnualCalendarData = async (

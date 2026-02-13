@@ -11,6 +11,9 @@ import {
   formatDateKorean,
   type AnnualCalendarData,
   type AcademicEvent,
+  type TimetableData,
+  type WeeklyHoursData,
+  type WeeklyHoursRow,
 } from '@/lib/firebase/annualCalendarService';
 
 const CURRENT_YEAR = 2026;
@@ -274,9 +277,25 @@ export default function AnnualCalendarPage() {
         />
       )}
 
-      {activeTab === 'timetable' && <TimetableTab />}
+      {activeTab === 'timetable' && (
+        <TimetableTab
+          data={data.timetable}
+          onDataChange={(newTimetable: TimetableData) => {
+            setData({ ...data, timetable: newTimetable });
+            setHasChanges(true);
+          }}
+        />
+      )}
 
-      {activeTab === 'weeklyHours' && <WeeklyHoursTab />}
+      {activeTab === 'weeklyHours' && (
+        <WeeklyHoursTab
+          data={data.weeklyHours}
+          onDataChange={(newWeeklyHours: WeeklyHoursData) => {
+            setData({ ...data, weeklyHours: newWeeklyHours });
+            setHasChanges(true);
+          }}
+        />
+      )}
 
       <Modal
         isOpen={isModalOpen}
@@ -526,7 +545,39 @@ function ScheduleTab({
   );
 }
 
-function TimetableTab() {
+function TimetableTab({
+  data,
+  onDataChange,
+}: {
+  data: TimetableData;
+  onDataChange: (data: TimetableData) => void;
+}) {
+  const handleArrivalChange = (field: 'arrivalTime' | 'arrivalNote', value: string) => {
+    onDataChange({ ...data, [field]: value });
+  };
+
+  const handleSlotChange = (
+    group: 'lowerGrades' | 'upperGrades',
+    index: number,
+    field: 'period' | 'time' | 'notes',
+    value: string
+  ) => {
+    const newSlots = [...data[group]];
+    newSlots[index] = { ...newSlots[index], [field]: value };
+    onDataChange({ ...data, [group]: newSlots });
+  };
+
+  const handleLunchChange = (
+    group: 'lunchLower' | 'lunchUpper',
+    field: 'time' | 'schedule',
+    value: string | string[]
+  ) => {
+    onDataChange({
+      ...data,
+      [group]: { ...data[group], [field]: value },
+    });
+  };
+
   return (
     <>
       <Card className="p-0 overflow-hidden">
@@ -534,95 +585,168 @@ function TimetableTab() {
           <span className="font-bold text-lg">⏰ 우리학교 시정표</span>
         </div>
         <div className="p-4">
-          <div className="mb-4 p-3 bg-[#fff3e0] rounded-xl border-2 border-[#ff9800] text-center">
-            <span className="font-bold text-[#e65100]">🚌 등교시간: 8:40~9:00</span>
-            <span className="text-sm text-[#f57c00] ml-2">(※ 안전사고 발생 우려가 있으므로 등교시간 준수)</span>
+          <div className="mb-4 p-3 bg-[#fff3e0] rounded-xl border-2 border-[#ff9800]">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="font-bold text-[#e65100]">🚌 등교시간:</span>
+              <input
+                type="text"
+                value={data.arrivalTime}
+                onChange={(e) => handleArrivalChange('arrivalTime', e.target.value)}
+                className="px-2 py-1 border-2 border-[#ff9800] rounded-lg font-bold text-center w-32"
+              />
+              <span className="text-sm text-[#f57c00]">(※</span>
+              <input
+                type="text"
+                value={data.arrivalNote}
+                onChange={(e) => handleArrivalChange('arrivalNote', e.target.value)}
+                className="px-2 py-1 border-2 border-[#ff9800] rounded-lg text-sm flex-1 min-w-[200px]"
+              />
+              <span className="text-sm text-[#f57c00]">)</span>
+            </div>
           </div>
           
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr>
-                  <th className="border-3 border-[#1A1A2E] px-4 py-3 bg-[#e0f7fa] min-w-[200px]">1,2,3학년</th>
-                  <th className="border-3 border-[#1A1A2E] px-4 py-3 bg-[#fffde7] min-w-[200px]">4,5,6학년</th>
-                  <th className="border-3 border-[#1A1A2E] px-4 py-3 bg-gray-100 w-20">비고</th>
+                  <th className="border-3 border-[#1A1A2E] px-4 py-3 bg-[#e0f7fa] min-w-[250px]">1,2,3학년</th>
+                  <th className="border-3 border-[#1A1A2E] px-4 py-3 bg-[#fffde7] min-w-[250px]">4,5,6학년</th>
+                  <th className="border-3 border-[#1A1A2E] px-4 py-3 bg-gray-100 w-24">비고</th>
                 </tr>
               </thead>
               <tbody>
+                {data.lowerGrades.slice(0, 4).map((slot, idx) => (
+                  <tr key={`period-${idx}`}>
+                    <td className="border-2 border-[#1A1A2E] px-2 py-2 bg-[#e0f7fa]">
+                      <div className="flex items-center gap-2 justify-center">
+                        <input
+                          type="text"
+                          value={slot.period}
+                          onChange={(e) => handleSlotChange('lowerGrades', idx, 'period', e.target.value)}
+                          className="w-16 px-1 py-1 border rounded text-center font-bold"
+                        />
+                        <input
+                          type="text"
+                          value={slot.time}
+                          onChange={(e) => handleSlotChange('lowerGrades', idx, 'time', e.target.value)}
+                          className="w-28 px-1 py-1 border rounded text-center text-gray-600"
+                        />
+                      </div>
+                    </td>
+                    <td className="border-2 border-[#1A1A2E] px-2 py-2 bg-[#fffde7]">
+                      {idx < 3 ? (
+                        <div className="flex items-center gap-2 justify-center">
+                          <input
+                            type="text"
+                            value={data.upperGrades[idx]?.period || ''}
+                            onChange={(e) => handleSlotChange('upperGrades', idx, 'period', e.target.value)}
+                            className="w-16 px-1 py-1 border rounded text-center font-bold"
+                          />
+                          <input
+                            type="text"
+                            value={data.upperGrades[idx]?.time || ''}
+                            onChange={(e) => handleSlotChange('upperGrades', idx, 'time', e.target.value)}
+                            className="w-28 px-1 py-1 border rounded text-center text-gray-600"
+                          />
+                        </div>
+                      ) : idx === 3 ? (
+                        <div className="flex items-center gap-2 justify-center">
+                          <input
+                            type="text"
+                            value={data.upperGrades[3]?.period || '4-5교시'}
+                            onChange={(e) => handleSlotChange('upperGrades', 3, 'period', e.target.value)}
+                            className="w-20 px-1 py-1 border rounded text-center font-bold"
+                          />
+                          <input
+                            type="text"
+                            value={data.upperGrades[3]?.time || ''}
+                            onChange={(e) => handleSlotChange('upperGrades', 3, 'time', e.target.value)}
+                            className="w-28 px-1 py-1 border rounded text-center text-gray-600"
+                          />
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="border-2 border-[#1A1A2E] px-2 py-2 bg-gray-50 text-center">
+                      {idx === 3 && <span className="font-bold text-[#e53935]">블록수업</span>}
+                    </td>
+                  </tr>
+                ))}
                 <tr>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
-                    <span className="font-bold">1교시</span><span className="text-gray-600">(09:00~09:40)</span>
+                  <td className="border-2 border-[#1A1A2E] px-3 py-3 bg-[#ffcdd2]">
+                    <div className="font-bold text-center mb-2">
+                      점심시간 (
+                      <input
+                        type="text"
+                        value={data.lunchLower.time}
+                        onChange={(e) => handleLunchChange('lunchLower', 'time', e.target.value)}
+                        className="w-28 px-1 border rounded text-center"
+                      />
+                      )
+                    </div>
+                    <textarea
+                      value={data.lunchLower.schedule.join('\n')}
+                      onChange={(e) => handleLunchChange('lunchLower', 'schedule', e.target.value.split('\n'))}
+                      className="w-full text-xs p-2 border rounded min-h-[80px]"
+                      placeholder="급식 시간표 입력..."
+                    />
                   </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#fffde7]">
-                    <span className="font-bold">1교시</span><span className="text-gray-600">(09:00~09:40)</span>
+                  <td className="border-2 border-[#1A1A2E] px-3 py-3 bg-[#ffcdd2]">
+                    <div className="font-bold text-center mb-2">
+                      점심시간 (
+                      <input
+                        type="text"
+                        value={data.lunchUpper.time}
+                        onChange={(e) => handleLunchChange('lunchUpper', 'time', e.target.value)}
+                        className="w-28 px-1 border rounded text-center"
+                      />
+                      )
+                    </div>
+                    <textarea
+                      value={data.lunchUpper.schedule.join('\n')}
+                      onChange={(e) => handleLunchChange('lunchUpper', 'schedule', e.target.value.split('\n'))}
+                      className="w-full text-xs p-2 border rounded min-h-[80px]"
+                      placeholder="급식 시간표 입력..."
+                    />
                   </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-gray-50"></td>
+                  <td className="border-2 border-[#1A1A2E] px-2 py-2 bg-gray-50"></td>
                 </tr>
-                <tr>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
-                    <span className="font-bold">2교시</span><span className="text-gray-600">(09:50~10:30)</span>
-                  </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#fffde7]">
-                    <span className="font-bold">2교시</span><span className="text-gray-600">(09:50~10:30)</span>
-                  </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-gray-50"></td>
-                </tr>
-                <tr>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
-                    <span className="font-bold">3교시</span><span className="text-gray-600">(10:40~11:20)</span>
-                  </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#fffde7]">
-                    <span className="font-bold">3교시</span><span className="text-gray-600">(10:40~11:20)</span>
-                  </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-gray-50"></td>
-                </tr>
-                <tr>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
-                    <span className="font-bold">4교시</span><span className="text-gray-600">(11:30~12:10)</span>
-                  </td>
-                  <td rowSpan={2} className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#fffde7]">
-                    <div className="font-bold">4교시<span className="text-gray-600">(11:30~12:10)</span></div>
-                    <div className="border-t border-dashed border-gray-400 my-2"></div>
-                    <div className="font-bold">5교시<span className="text-gray-600">(12:10~12:50)</span></div>
-                  </td>
-                  <td rowSpan={2} className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#ffcdd2] font-bold">
-                    블록<br/>수업
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 bg-[#ffcdd2]">
-                    <div className="font-bold text-center mb-2">점심시간(12:10~13:00)</div>
-                    <ul className="text-xs space-y-1 text-gray-700">
-                      <li>- 12:05~12:10 교직원</li>
-                      <li>- 12:10~12:18 1-1</li>
-                      <li>- 12:18~12:26 1-2</li>
-                      <li>- 12:26~12:35 1-3</li>
-                    </ul>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
-                    <span className="font-bold">5교시</span><span className="text-gray-600">(13:00~13:40)</span>
-                  </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 bg-[#ffcdd2]">
-                    <div className="font-bold text-center mb-2">점심시간(12:50~13:50)</div>
-                    <ul className="text-xs space-y-1 text-gray-700">
-                      <li>- 12:50~12:58 2-1</li>
-                      <li>- 12:58~13:06 2-2</li>
-                      <li>- 13:06~13:15 2-3</li>
-                    </ul>
-                  </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-gray-50"></td>
-                </tr>
-                <tr>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#e0f7fa]">
-                    <span className="font-bold">6교시</span><span className="text-gray-600">(13:50~14:30)</span>
-                  </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-[#fffde7]">
-                    <span className="font-bold">6교시</span><span className="text-gray-600">(13:50~14:30)</span>
-                  </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center bg-gray-50"></td>
-                </tr>
+                {data.lowerGrades.slice(4).map((slot, idx) => (
+                  <tr key={`period-after-lunch-${idx}`}>
+                    <td className="border-2 border-[#1A1A2E] px-2 py-2 bg-[#e0f7fa]">
+                      <div className="flex items-center gap-2 justify-center">
+                        <input
+                          type="text"
+                          value={slot.period}
+                          onChange={(e) => handleSlotChange('lowerGrades', idx + 4, 'period', e.target.value)}
+                          className="w-16 px-1 py-1 border rounded text-center font-bold"
+                        />
+                        <input
+                          type="text"
+                          value={slot.time}
+                          onChange={(e) => handleSlotChange('lowerGrades', idx + 4, 'time', e.target.value)}
+                          className="w-28 px-1 py-1 border rounded text-center text-gray-600"
+                        />
+                      </div>
+                    </td>
+                    <td className="border-2 border-[#1A1A2E] px-2 py-2 bg-[#fffde7]">
+                      <div className="flex items-center gap-2 justify-center">
+                        <input
+                          type="text"
+                          value={data.upperGrades[idx + 4]?.period || ''}
+                          onChange={(e) => handleSlotChange('upperGrades', idx + 4, 'period', e.target.value)}
+                          className="w-16 px-1 py-1 border rounded text-center font-bold"
+                        />
+                        <input
+                          type="text"
+                          value={data.upperGrades[idx + 4]?.time || ''}
+                          onChange={(e) => handleSlotChange('upperGrades', idx + 4, 'time', e.target.value)}
+                          className="w-28 px-1 py-1 border rounded text-center text-gray-600"
+                        />
+                      </div>
+                    </td>
+                    <td className="border-2 border-[#1A1A2E] px-2 py-2 bg-gray-50"></td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -634,22 +758,46 @@ function TimetableTab() {
         <ul className="text-sm space-y-1 text-[#e65100]">
           <li>• 4,5,6학년은 4-5교시를 블록수업으로 운영합니다.</li>
           <li>• 점심시간은 학년군별로 다르게 운영됩니다.</li>
-          <li>• 급식 배식 시간을 준수해 주세요.</li>
+          <li>• 시정표 수정 후 &quot;변경사항 저장&quot; 버튼을 클릭하세요.</li>
         </ul>
       </Card>
     </>
   );
 }
 
-function WeeklyHoursTab() {
-  const weeklyHoursData = [
-    { grade: '1학년', mon: 5, tue: 5, wed: 4, thu: 5, fri: '4(5)', bgColor: '#fce4ec' },
-    { grade: '2학년', mon: 5, tue: 5, wed: 4, thu: 5, fri: 5, bgColor: '#fce4ec' },
-    { grade: '3학년', mon: 5, tue: 5, wed: 5, thu: 6, fri: 5, bgColor: '#e3f2fd' },
-    { grade: '4학년', mon: 5, tue: 5, wed: 5, thu: 6, fri: 5, bgColor: '#e3f2fd' },
-    { grade: '5학년', mon: 6, tue: 6, wed: 5, thu: 6, fri: 6, bgColor: '#e8f5e9' },
-    { grade: '6학년', mon: 6, tue: 6, wed: 5, thu: 6, fri: 6, bgColor: '#e8f5e9' },
-  ];
+function WeeklyHoursTab({
+  data,
+  onDataChange,
+}: {
+  data: WeeklyHoursData;
+  onDataChange: (data: WeeklyHoursData) => void;
+}) {
+  const gradeColors: Record<string, string> = {
+    '1학년': '#fce4ec',
+    '2학년': '#fce4ec',
+    '3학년': '#e3f2fd',
+    '4학년': '#e3f2fd',
+    '5학년': '#e8f5e9',
+    '6학년': '#e8f5e9',
+  };
+
+  const handleHoursChange = (
+    index: number,
+    field: 'mon' | 'tue' | 'wed' | 'thu' | 'fri',
+    value: string
+  ) => {
+    const newRows = [...data.rows];
+    const numValue = parseInt(value);
+    newRows[index] = {
+      ...newRows[index],
+      [field]: isNaN(numValue) ? value : numValue,
+    };
+    onDataChange({ ...data, rows: newRows });
+  };
+
+  const handleHomeStudyChange = (value: number) => {
+    onDataChange({ ...data, homeStudyDays: value });
+  };
 
   return (
     <>
@@ -662,24 +810,62 @@ function WeeklyHoursTab() {
             <thead>
               <tr className="bg-[#e0f7fa]">
                 <th className="border-3 border-[#1A1A2E] px-4 py-3 min-w-[100px]">학년</th>
-                <th className="border-3 border-[#1A1A2E] px-4 py-3">월</th>
-                <th className="border-3 border-[#1A1A2E] px-4 py-3">화</th>
-                <th className="border-3 border-[#1A1A2E] px-4 py-3">수</th>
-                <th className="border-3 border-[#1A1A2E] px-4 py-3">목</th>
-                <th className="border-3 border-[#1A1A2E] px-4 py-3">금</th>
+                <th className="border-3 border-[#1A1A2E] px-4 py-3 w-20">월</th>
+                <th className="border-3 border-[#1A1A2E] px-4 py-3 w-20">화</th>
+                <th className="border-3 border-[#1A1A2E] px-4 py-3 w-20">수</th>
+                <th className="border-3 border-[#1A1A2E] px-4 py-3 w-20">목</th>
+                <th className="border-3 border-[#1A1A2E] px-4 py-3 w-20">금</th>
               </tr>
             </thead>
             <tbody>
-              {weeklyHoursData.map((row) => (
+              {data.rows.map((row, idx) => (
                 <tr key={row.grade}>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 font-bold text-center" style={{ backgroundColor: row.bgColor }}>
+                  <td
+                    className="border-2 border-[#1A1A2E] px-4 py-3 font-bold text-center"
+                    style={{ backgroundColor: gradeColors[row.grade] || '#f5f5f5' }}
+                  >
                     {row.grade}
                   </td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center font-bold text-lg">{row.mon}</td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center font-bold text-lg">{row.tue}</td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center font-bold text-lg">{row.wed}</td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center font-bold text-lg">{row.thu}</td>
-                  <td className="border-2 border-[#1A1A2E] px-4 py-3 text-center font-bold text-lg">{row.fri}</td>
+                  <td className="border-2 border-[#1A1A2E] p-1">
+                    <input
+                      type="text"
+                      value={row.mon}
+                      onChange={(e) => handleHoursChange(idx, 'mon', e.target.value)}
+                      className="w-full px-2 py-2 text-center font-bold text-lg border-2 border-gray-300 rounded-lg focus:border-[#9C27B0] focus:outline-none"
+                    />
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] p-1">
+                    <input
+                      type="text"
+                      value={row.tue}
+                      onChange={(e) => handleHoursChange(idx, 'tue', e.target.value)}
+                      className="w-full px-2 py-2 text-center font-bold text-lg border-2 border-gray-300 rounded-lg focus:border-[#9C27B0] focus:outline-none"
+                    />
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] p-1">
+                    <input
+                      type="text"
+                      value={row.wed}
+                      onChange={(e) => handleHoursChange(idx, 'wed', e.target.value)}
+                      className="w-full px-2 py-2 text-center font-bold text-lg border-2 border-gray-300 rounded-lg focus:border-[#9C27B0] focus:outline-none"
+                    />
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] p-1">
+                    <input
+                      type="text"
+                      value={row.thu}
+                      onChange={(e) => handleHoursChange(idx, 'thu', e.target.value)}
+                      className="w-full px-2 py-2 text-center font-bold text-lg border-2 border-gray-300 rounded-lg focus:border-[#9C27B0] focus:outline-none"
+                    />
+                  </td>
+                  <td className="border-2 border-[#1A1A2E] p-1">
+                    <input
+                      type="text"
+                      value={row.fri}
+                      onChange={(e) => handleHoursChange(idx, 'fri', e.target.value)}
+                      className="w-full px-2 py-2 text-center font-bold text-lg border-2 border-gray-300 rounded-lg focus:border-[#9C27B0] focus:outline-none"
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -688,19 +874,31 @@ function WeeklyHoursTab() {
       </Card>
 
       <Card className="bg-[#f3e5f5] border-l-4 border-[#9c27b0]">
-        <div className="font-bold mb-2">📌 가정학습 일수</div>
+        <div className="font-bold mb-2 flex items-center gap-3">
+          📌 가정학습 일수:
+          <input
+            type="number"
+            min={0}
+            max={50}
+            value={data.homeStudyDays}
+            onChange={(e) => handleHomeStudyChange(parseInt(e.target.value) || 0)}
+            className="w-20 px-2 py-1 text-center font-bold border-2 border-[#9c27b0] rounded-lg"
+          />
+          <span className="text-[#7b1fa2]">일</span>
+        </div>
         <p className="text-sm text-[#7b1fa2]">
-          연간 가정학습 최대 허가 일수는 <strong>20일</strong>로 운영
+          연간 가정학습 최대 허가 일수를 설정합니다.
         </p>
       </Card>
 
       <Card className="bg-[#e8f4f8] border-l-4 border-[#3498db]">
         <div className="font-bold mb-2">💡 시수 안내</div>
         <ul className="text-sm space-y-1 text-[#2980b9]">
-          <li>• 1학년 금요일 4(5): 격주로 4시간 또는 5시간 운영</li>
+          <li>• 1학년 금요일 4(5): 격주로 4시간 또는 5시간 운영 시 &quot;4(5)&quot;로 입력</li>
           <li>• 저학년(1-2학년): 주당 23~24시간</li>
           <li>• 중학년(3-4학년): 주당 26시간</li>
           <li>• 고학년(5-6학년): 주당 29시간</li>
+          <li>• 시수 수정 후 &quot;변경사항 저장&quot; 버튼을 클릭하세요.</li>
         </ul>
       </Card>
     </>
