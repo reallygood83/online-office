@@ -47,8 +47,17 @@ export default function AnnualCalendarPage() {
     setLoading(true);
     try {
       let fetchedData = await getAnnualCalendarData(CURRENT_YEAR);
+      const defaultData = initializeAnnualCalendarData();
+      
       if (!fetchedData) {
-        fetchedData = initializeAnnualCalendarData();
+        fetchedData = defaultData;
+      } else {
+        fetchedData = {
+          ...defaultData,
+          ...fetchedData,
+          timetable: fetchedData.timetable || defaultData.timetable,
+          weeklyHours: fetchedData.weeklyHours || defaultData.weeklyHours,
+        };
       }
       setData(fetchedData);
     } catch (error) {
