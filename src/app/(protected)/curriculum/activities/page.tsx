@@ -100,12 +100,12 @@ export default function CurriculumActivitiesPage() {
       if (editingItem) {
         await updateCurriculumScheduleItem(editingItem.id, {
           ...formData,
-          endDate: formData.endDate || undefined,
+          endDate: formData.endDate || '',
         }, userId);
       } else {
         await addCurriculumScheduleItem({
           ...formData,
-          endDate: formData.endDate || undefined,
+          endDate: formData.endDate || '',
           year: CURRENT_YEAR,
         }, userId);
       }
