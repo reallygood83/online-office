@@ -108,19 +108,28 @@ export default function CurriculumActivitiesPage() {
   };
 
   const handleInitializeData = async () => {
-    if (!user) return;
+    if (!user?.uid) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
     if (!confirm('PDF 데이터를 기반으로 45개 일정을 불러오시겠습니까?')) return;
 
     setInitializing(true);
     try {
+      let successCount = 0;
       for (const item of INITIAL_SCHEDULE_DATA) {
-        await addCurriculumScheduleItem({ ...item, year: currentYear }, user.uid);
+        try {
+          await addCurriculumScheduleItem({ ...item, year: currentYear }, user.uid);
+          successCount++;
+        } catch (e) {
+          console.error('Failed to add item:', item.activityName, e);
+        }
       }
       await loadItems();
-      alert('✅ 초기 데이터가 추가되었습니다!\n학사일정 캘린더에도 자동 연동되었습니다.');
+      alert(`✅ ${successCount}개 일정이 추가되었습니다!\n학사일정 캘린더에도 자동 연동되었습니다.`);
     } catch (error) {
       console.error('Failed to initialize:', error);
-      alert('초기화에 실패했습니다.');
+      alert('초기화에 실패했습니다: ' + (error as Error).message);
     } finally {
       setInitializing(false);
     }

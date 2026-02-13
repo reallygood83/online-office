@@ -304,7 +304,17 @@ export const getSchoolEvents = async (year?: number, month?: number) => {
 
 export const addSchoolEvent = async (data: Omit<SchoolEvent, 'id'>) => {
   const docRef = doc(collection(db, 'events'));
-  await setDoc(docRef, data);
+  const cleanData: Record<string, unknown> = {
+    title: data.title,
+    date: data.date,
+    category: data.category,
+    isHoliday: data.isHoliday ?? false,
+    createdBy: data.createdBy,
+  };
+  if (data.endDate) cleanData.endDate = data.endDate;
+  if (data.description) cleanData.description = data.description;
+  
+  await setDoc(docRef, cleanData);
   return docRef.id;
 };
 

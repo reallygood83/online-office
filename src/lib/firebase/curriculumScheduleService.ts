@@ -38,15 +38,19 @@ export const addCurriculumScheduleItem = async (
   item: Omit<CurriculumScheduleItem, 'id' | 'createdAt' | 'updatedAt' | 'linkedEventId'>,
   userId: string
 ): Promise<string> => {
+  if (!userId) {
+    throw new Error('userId is required');
+  }
+
   const docRef = doc(collection(db, COLLECTION_NAME));
 
-  let eventId: string | undefined;
+  let eventId = '';
   
   try {
     eventId = await addSchoolEvent({
       title: item.activityName,
       date: item.startDate,
-      endDate: item.endDate || undefined,
+      endDate: item.endDate || '',
       category: 'academic',
       description: `${item.subject}${item.notes ? ' | ' + item.notes : ''}`,
       isHoliday: false,
@@ -56,20 +60,29 @@ export const addCurriculumScheduleItem = async (
     console.warn('Failed to create linked event:', e);
   }
 
-  await setDoc(docRef, {
+  const docData = {
     month: item.month,
     startDate: item.startDate,
     endDate: item.endDate || '',
     activityName: item.activityName,
-    gradeHours: item.gradeHours,
-    subject: item.subject,
+    gradeHours: {
+      grade1: item.gradeHours.grade1 ?? null,
+      grade2: item.gradeHours.grade2 ?? null,
+      grade3: item.gradeHours.grade3 ?? null,
+      grade4: item.gradeHours.grade4 ?? null,
+      grade5: item.gradeHours.grade5 ?? null,
+      grade6: item.gradeHours.grade6 ?? null,
+    },
+    subject: item.subject || '',
     notes: item.notes || '',
     year: item.year,
-    linkedEventId: eventId || '',
+    linkedEventId: eventId,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     updatedBy: userId,
-  });
+  };
+
+  await setDoc(docRef, docData);
 
   return docRef.id;
 };
