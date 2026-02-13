@@ -134,31 +134,31 @@ export default function CrossSubjectCurriculumPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black">📋 학생안전교육 7대 영역 시수 편성표</h1>
+          <h1 className="text-3xl font-black">📋 범교과 시수 편성표</h1>
           <p className="text-gray-600 mt-1">{currentYear}학년도 기준 | 경기도교육청</p>
         </div>
         <Button
           onClick={handleSave}
           disabled={saving || !hasChanges}
-          className={hasChanges ? 'bg-[#FF6B6B] hover:bg-[#FF5252]' : ''}
+          variant={hasChanges ? 'primary' : 'secondary'}
         >
-          {saving ? '저장 중...' : hasChanges ? '💾 변경사항 저장' : '저장됨'}
+          {saving ? '저장 중...' : hasChanges ? '💾 변경사항 저장' : '✓ 저장됨'}
         </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-[#667eea] to-[#764ba2] text-white text-center">
-          <div className="text-sm opacity-90">학생안전교육 기준</div>
-          <div className="text-3xl font-black">51시간+</div>
-        </Card>
-        <Card className="bg-gradient-to-br from-[#f093fb] to-[#f5576c] text-white text-center">
-          <div className="text-sm opacity-90">아동안전교육 기준</div>
-          <div className="text-3xl font-black">44시간+</div>
-        </Card>
-        <Card className="bg-gradient-to-br from-[#4facfe] to-[#00f2fe] text-white text-center">
-          <div className="text-sm opacity-90">현재 입력 총계</div>
-          <div className="text-3xl font-black">{grandTotal}시간</div>
-        </Card>
+        <div className="neo-card rounded-xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+          <div className="text-sm text-white/90">학생안전교육 기준</div>
+          <div className="text-3xl font-black text-white">51시간+</div>
+        </div>
+        <div className="neo-card rounded-xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+          <div className="text-sm text-white/90">아동안전교육 기준</div>
+          <div className="text-3xl font-black text-white">44시간+</div>
+        </div>
+        <div className="neo-card rounded-xl p-6 text-center" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
+          <div className="text-sm text-white/90">현재 입력 총계</div>
+          <div className="text-3xl font-black text-white">{grandTotal}시간</div>
+        </div>
       </div>
 
       <Card className="p-0 overflow-hidden">
