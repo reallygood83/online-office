@@ -162,6 +162,8 @@ export function MobileMenu({ user, navItems, curriculumItems, onLogout }: Mobile
               '/classes': '🏫',
               '/reservation': '🚪',
               '/calendar': '📆',
+              '/notifications': '🔔',
+              '/board': '📋',
             };
             return (
               <Link

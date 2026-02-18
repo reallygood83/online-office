@@ -14,6 +14,23 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const isKakaoInApp = /KAKAOTALK/i.test(userAgent);
+  const isInAppBrowser = /KAKAOTALK|FBAN|FBAV|Instagram|Line\//i.test(userAgent);
+
+  const openInExternalBrowser = () => {
+    const currentUrl = window.location.href;
+    const isAndroid = /Android/i.test(userAgent);
+
+    if (isAndroid) {
+      const stripped = currentUrl.replace(/^https?:\/\//, '');
+      window.location.href = `intent://${stripped}#Intent;scheme=https;package=com.android.chrome;end`;
+      return;
+    }
+
+    window.open(currentUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -40,8 +57,13 @@ export function LoginForm() {
     setGoogleLoading(true);
 
     try {
-      await signInWithGoogle(password || undefined);
-      router.push('/dashboard');
+      const userData = await signInWithGoogle(password || undefined, {
+        preferRedirect: isInAppBrowser,
+      });
+
+      if (userData) {
+        router.push('/dashboard');
+      }
     } catch (err: any) {
       const errorMessages: Record<string, string> = {
         'auth/popup-closed-by-user': '구글 로그인 창이 닫혔습니다. 다시 시도해주세요.',
@@ -63,6 +85,17 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {isKakaoInApp && (
+            <div className="neo-card bg-[#FFE135]/20 p-3 rounded-lg space-y-2">
+              <p className="text-sm font-semibold">
+                카카오톡 브라우저에서는 Google 로그인 팝업이 제한될 수 있습니다.
+              </p>
+              <Button type="button" variant="accent" className="w-full" onClick={openInExternalBrowser}>
+                외부 브라우저로 열기
+              </Button>
+            </div>
+          )}
+
           <Input
             type="email"
             label="이메일"

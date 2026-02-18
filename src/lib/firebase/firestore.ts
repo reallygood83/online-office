@@ -195,6 +195,15 @@ export const getAnnouncements = async () => {
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Announcement[];
 };
 
+export const getAnnouncementById = async (id: string) => {
+  const docRef = doc(db, 'announcements', id);
+  const snapshot = await getDoc(docRef);
+  if (!snapshot.exists()) {
+    return null;
+  }
+  return { id: snapshot.id, ...snapshot.data() } as Announcement;
+};
+
 export const createAnnouncement = async (data: Omit<Announcement, 'id' | 'createdAt'>) => {
   const docRef = doc(collection(db, 'announcements'));
   await setDoc(docRef, {

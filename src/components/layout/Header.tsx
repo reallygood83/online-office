@@ -39,6 +39,8 @@ export function Header({ user, onLogout }: HeaderProps) {
     { href: '/classes', label: '학급 관리' },
     { href: '/reservation', label: '특별실 예약' },
     { href: '/calendar', label: '학사일정' },
+    { href: '/notifications', label: '알림' },
+    { href: '/board', label: '게시판' },
   ];
 
   const curriculumItems = [

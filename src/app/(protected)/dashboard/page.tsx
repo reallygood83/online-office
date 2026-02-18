@@ -101,6 +101,20 @@ export default function DashboardPage() {
       description: '학급별 담임교사 정보 관리',
       color: 'bg-[#7BED9F]',
     },
+    {
+      href: '/board',
+      icon: '📋',
+      title: '정보공유 게시판',
+      description: '교무부/연구부/정보부 소식을 공유',
+      color: 'bg-[#FFEAA7]',
+    },
+    {
+      href: '/notifications',
+      icon: '🔔',
+      title: '전체 알림',
+      description: '받은 알림을 한 번에 확인',
+      color: 'bg-[#DFE6E9]',
+    },
   ];
 
   const statsDisplay = [

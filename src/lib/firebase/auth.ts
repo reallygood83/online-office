@@ -5,6 +5,7 @@ import {
   linkWithCredential,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   User,
@@ -133,11 +134,28 @@ export const signIn = async (email: string, password: string): Promise<UserData>
   return userDoc.data() as UserData;
 };
 
-export const signInWithGoogle = async (passwordForLinking?: string): Promise<UserData> => {
+export const signInWithGoogle = async (
+  passwordForLinking?: string,
+  options?: { preferRedirect?: boolean }
+): Promise<UserData | null> => {
+  if (options?.preferRedirect) {
+    await signInWithRedirect(auth, googleProvider);
+    return null;
+  }
+
   try {
     const userCredential = await signInWithPopup(auth, googleProvider);
     return await getOrCreateUserDocument(userCredential.user);
   } catch (error: any) {
+    if (
+      error?.code === 'auth/popup-blocked' ||
+      error?.code === 'auth/operation-not-supported-in-this-environment' ||
+      error?.code === 'auth/cancelled-popup-request'
+    ) {
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
+
     if (error?.code !== 'auth/account-exists-with-different-credential') {
       throw error;
     }
@@ -178,6 +196,9 @@ export const signOut = async (): Promise<void> => {
 export const getCurrentUserData = async (uid: string): Promise<UserData | null> => {
   const userDoc = await getDoc(doc(db, 'users', uid));
   if (!userDoc.exists()) {
+    if (auth.currentUser && auth.currentUser.uid === uid) {
+      return await getOrCreateUserDocument(auth.currentUser);
+    }
     return null;
   }
   return userDoc.data() as UserData;

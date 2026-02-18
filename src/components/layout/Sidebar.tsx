@@ -18,6 +18,8 @@ export function Sidebar({ isAdmin }: SidebarProps) {
     { href: '/classes', label: '학급/담임 관리', icon: '📚' },
     { href: '/reservation', label: '특별실 예약', icon: '🏢' },
     { href: '/calendar', label: '학사일정', icon: '📅' },
+    { href: '/board', label: '정보공유 게시판', icon: '📋' },
+    { href: '/notifications', label: '전체 알림', icon: '🔔' },
   ];
 
   const adminItems = [

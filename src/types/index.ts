@@ -338,6 +338,38 @@ export interface UserNotification {
   createdAt: any;
 }
 
+// ========== BOARD ==========
+export type BoardCategory = 'academic-affairs' | 'research' | 'information' | 'sports' | 'character';
+
+export const BOARD_CATEGORY_LABELS: Record<BoardCategory, string> = {
+  'academic-affairs': '교무부',
+  research: '연구부',
+  information: '정보부',
+  sports: '체육부',
+  character: '생활인성부',
+};
+
+export interface BoardAttachment {
+  name: string;
+  url: string;
+  path: string;
+  size: number;
+  contentType?: string;
+}
+
+export interface BoardPost {
+  id: string;
+  category: BoardCategory;
+  title: string;
+  content: string;
+  links: string[];
+  attachment?: BoardAttachment;
+  createdBy: string;
+  createdByName: string;
+  createdAt: any;
+  updatedAt?: any;
+}
+
 export interface TeacherInfoData {
   subject: string;
   weeklyHours: number;

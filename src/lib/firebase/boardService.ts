@@ -1,0 +1,104 @@
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
+} from 'firebase/firestore';
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from 'firebase/storage';
+import { db, storage } from './config';
+import type { BoardAttachment, BoardCategory, BoardPost } from '@/types';
+
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
+export const getBoardPosts = async () => {
+  const q = query(collection(db, 'boardPosts'), orderBy('createdAt', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((postDoc) => ({ id: postDoc.id, ...postDoc.data() })) as BoardPost[];
+};
+
+const uploadAttachment = async (file: File, userId: string): Promise<BoardAttachment> => {
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    throw new Error('파일은 5MB 이하만 업로드할 수 있습니다.');
+  }
+
+  const timestamp = Date.now();
+  const sanitizedName = file.name.replace(/\s+/g, '-');
+  const filePath = `board-attachments/${userId}/${timestamp}-${sanitizedName}`;
+  const storageRef = ref(storage, filePath);
+
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
+
+  return {
+    name: file.name,
+    url,
+    path: filePath,
+    size: file.size,
+    contentType: file.type || undefined,
+  };
+};
+
+export const createBoardPost = async (data: {
+  category: BoardCategory;
+  title: string;
+  content: string;
+  links: string[];
+  createdBy: string;
+  createdByName: string;
+  file?: File | null;
+}) => {
+  const postRef = doc(collection(db, 'boardPosts'));
+  let attachment: BoardAttachment | undefined;
+
+  if (data.file) {
+    attachment = await uploadAttachment(data.file, data.createdBy);
+  }
+
+  await setDoc(postRef, {
+    category: data.category,
+    title: data.title,
+    content: data.content,
+    links: data.links,
+    attachment,
+    createdBy: data.createdBy,
+    createdByName: data.createdByName,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  return postRef.id;
+};
+
+export const deleteBoardPost = async (postId: string) => {
+  const postRef = doc(db, 'boardPosts', postId);
+  const postSnap = await getDoc(postRef);
+
+  if (!postSnap.exists()) {
+    return;
+  }
+
+  const postData = postSnap.data() as BoardPost;
+
+  if (postData.attachment?.path) {
+    const attachmentRef = ref(storage, postData.attachment.path);
+    try {
+      await deleteObject(attachmentRef);
+    } catch {
+      // Ignore storage deletion failure and continue deleting DB document.
+    }
+  }
+
+  await deleteDoc(postRef);
+};
+
+export const BOARD_UPLOAD_LIMIT_MB = MAX_FILE_SIZE_BYTES / (1024 * 1024);
