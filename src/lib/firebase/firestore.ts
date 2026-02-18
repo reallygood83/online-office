@@ -368,9 +368,17 @@ export const getAllWeekReservations = async (weekStart: string) => {
 };
 
 export const createReservation = async (data: Omit<RoomReservation, 'id' | 'createdAt'>) => {
+  if (!data.reservedBy) {
+    throw new Error('reservedBy is required');
+  }
+
   const docRef = doc(collection(db, 'reservations'));
+  const sanitizedData = Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== undefined)
+  ) as Omit<RoomReservation, 'id' | 'createdAt'>;
+
   await setDoc(docRef, {
-    ...data,
+    ...sanitizedData,
     createdAt: serverTimestamp()
   });
   return docRef.id;

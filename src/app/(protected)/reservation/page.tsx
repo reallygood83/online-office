@@ -40,7 +40,7 @@ function addDays(date: Date, days: number): Date {
 }
 
 export default function ReservationPage() {
-  const { user } = useAuth();
+  const { user, firebaseUser } = useAuth();
   const [rooms, setRooms] = useState<SpecialRoom[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string>('');
   const [weekStart, setWeekStart] = useState<Date>(() => getMonday(new Date()));
@@ -138,7 +138,11 @@ export default function ReservationPage() {
   }
 
   async function handleSaveReservation() {
-    if (!user || !selectedSlot) return;
+    const userId = firebaseUser?.uid || user?.uid;
+    if (!userId || !selectedSlot) return;
+
+    const reserverName =
+      user?.displayName || user?.email || firebaseUser?.displayName || firebaseUser?.email || '알 수 없음';
 
     setSaving(true);
     try {
@@ -147,8 +151,8 @@ export default function ReservationPage() {
         weekStart: formatDate(weekStart),
         day: selectedSlot.day,
         period: selectedSlot.period,
-        reservedBy: user.uid,
-        reserverName: user.displayName || user.email || '알 수 없음',
+        reservedBy: userId,
+        reserverName,
         className: formData.className || undefined,
         purpose: formData.purpose || undefined,
       });

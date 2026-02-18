@@ -1,6 +1,10 @@
 import {
   createUserWithEmailAndPassword,
+  fetchSignInMethodsForEmail,
+  GoogleAuthProvider,
+  linkWithCredential,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   User,
@@ -21,6 +25,49 @@ export interface UserData {
   createdAt: Date;
   lastLoginAt: Date;
 }
+
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+const getOrCreateUserDocument = async (user: User): Promise<UserData> => {
+  const userRef = doc(db, 'users', user.uid);
+  const userDoc = await getDoc(userRef);
+
+  if (!userDoc.exists()) {
+    const newUserData: Omit<UserData, 'createdAt' | 'lastLoginAt'> & {
+      createdAt: ReturnType<typeof serverTimestamp>;
+      lastLoginAt: ReturnType<typeof serverTimestamp>;
+    } = {
+      uid: user.uid,
+      email: user.email || '',
+      displayName: user.displayName || user.email || '교직원',
+      role: 'teacher',
+      isAdmin: false,
+      createdAt: serverTimestamp(),
+      lastLoginAt: serverTimestamp(),
+    };
+
+    await setDoc(userRef, newUserData);
+    return {
+      ...newUserData,
+      createdAt: new Date(),
+      lastLoginAt: new Date(),
+    } as UserData;
+  }
+
+  await setDoc(
+    userRef,
+    {
+      email: user.email || '',
+      displayName: user.displayName || user.email || '교직원',
+      lastLoginAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  const latestDoc = await getDoc(userRef);
+  return latestDoc.data() as UserData;
+};
 
 // Verify special code
 export const verifySpecialCode = (code: string): boolean => {
@@ -84,6 +131,42 @@ export const signIn = async (email: string, password: string): Promise<UserData>
   }
 
   return userDoc.data() as UserData;
+};
+
+export const signInWithGoogle = async (passwordForLinking?: string): Promise<UserData> => {
+  try {
+    const userCredential = await signInWithPopup(auth, googleProvider);
+    return await getOrCreateUserDocument(userCredential.user);
+  } catch (error: any) {
+    if (error?.code !== 'auth/account-exists-with-different-credential') {
+      throw error;
+    }
+
+    const email = error?.customData?.email;
+    const pendingCredential = GoogleAuthProvider.credentialFromError(error);
+
+    if (!email || !pendingCredential) {
+      throw error;
+    }
+
+    const signInMethods = await fetchSignInMethodsForEmail(auth, email);
+
+    if (signInMethods.includes('password')) {
+      if (!passwordForLinking) {
+        const linkingError = new Error('기존 이메일 계정 비밀번호를 입력하면 구글 계정을 연동할 수 있습니다.') as Error & {
+          code?: string;
+        };
+        linkingError.code = 'auth/requires-password-for-google-link';
+        throw linkingError;
+      }
+
+      const passwordUserCredential = await signInWithEmailAndPassword(auth, email, passwordForLinking);
+      await linkWithCredential(passwordUserCredential.user, pendingCredential);
+      return await getOrCreateUserDocument(passwordUserCredential.user);
+    }
+
+    throw error;
+  }
 };
 
 // Sign out
