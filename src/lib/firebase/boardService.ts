@@ -19,6 +19,46 @@ import { db, storage } from './config';
 import type { BoardAttachment, BoardCategory, BoardPost } from '@/types';
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_EXTENSIONS = new Set([
+  'hwp',
+  'hwpx',
+  'pdf',
+  'doc',
+  'docx',
+  'xls',
+  'xlsx',
+  'ppt',
+  'pptx',
+  'txt',
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'webp',
+]);
+
+const ALLOWED_CONTENT_TYPES = new Set([
+  'application/x-hwp',
+  'application/haansofthwp',
+  'application/vnd.hancom.hwp',
+  'application/haansoft.hwpx',
+  'application/vnd.hancom.hwpx',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'text/plain',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+]);
+
+function hasAllowedExtension(fileName: string) {
+  const extension = fileName.split('.').pop()?.toLowerCase();
+  return extension ? ALLOWED_EXTENSIONS.has(extension) : false;
+}
 
 export const getBoardPosts = async () => {
   const q = query(collection(db, 'boardPosts'), orderBy('createdAt', 'desc'));
@@ -29,6 +69,10 @@ export const getBoardPosts = async () => {
 const uploadAttachment = async (file: File, userId: string): Promise<BoardAttachment> => {
   if (file.size > MAX_FILE_SIZE_BYTES) {
     throw new Error('파일은 5MB 이하만 업로드할 수 있습니다.');
+  }
+
+  if (!ALLOWED_CONTENT_TYPES.has(file.type) && !hasAllowedExtension(file.name)) {
+    throw new Error('지원하지 않는 파일 형식입니다. (hwp, hwpx, pdf, office, txt, 이미지)');
   }
 
   const timestamp = Date.now();

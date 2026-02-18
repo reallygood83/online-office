@@ -10,10 +10,11 @@ service firebase.storage {
         && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
 
-    function isAllowedType() {
+    function isAllowedType(fileName) {
       return request.resource.contentType.matches(
-        'image/(jpeg|png|gif|webp)|application/pdf|application/msword|application/vnd\\.openxmlformats-officedocument\\..*|text/plain'
-      );
+          'image/(jpeg|png|gif|webp)|application/pdf|application/msword|application/vnd\\.openxmlformats-officedocument\\..*|text/plain|application/x-hwp|application/haansofthwp|application/vnd\\.hancom\\.hwp|application/haansoft\\.hwpx|application/vnd\\.hancom\\.hwpx'
+        )
+        || fileName.matches('.*\\.(hwp|hwpx|pdf|doc|docx|xls|xlsx|ppt|pptx|txt|jpg|jpeg|png|gif|webp)$');
     }
 
     match /board-attachments/{userId}/{fileName} {
@@ -21,7 +22,7 @@ service firebase.storage {
       allow write: if isSignedIn()
         && request.auth.uid == userId
         && request.resource.size <= 5 * 1024 * 1024
-        && isAllowedType();
+        && isAllowedType(fileName);
       allow delete: if isSignedIn() && (request.auth.uid == userId || isAdmin());
     }
 

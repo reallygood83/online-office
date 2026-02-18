@@ -144,6 +144,10 @@ export default function BoardPage() {
       setIsModalOpen(false);
     } catch (error: any) {
       console.error('Failed to create board post:', error);
+      if (error?.code === 'storage/unauthorized') {
+        alert('첨부파일 업로드 권한이 없습니다. Storage Rules 배포 상태를 확인해주세요.');
+        return;
+      }
       alert(error?.message || '게시글 등록에 실패했습니다.');
     } finally {
       setSaving(false);
@@ -350,6 +354,7 @@ export default function BoardPage() {
             <label className="block font-bold mb-2">첨부파일 (선택, 최대 {BOARD_UPLOAD_LIMIT_MB}MB)</label>
             <input
               type="file"
+              accept=".hwp,.hwpx,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.webp"
               onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
               className="w-full p-3 border-3 border-black rounded-lg font-bold bg-white"
             />
