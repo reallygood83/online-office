@@ -60,7 +60,7 @@ function formatDate(timestamp: any): string {
 }
 
 export default function BoardPage() {
-  const { user } = useAuth();
+  const { user, firebaseUser } = useAuth();
   const [posts, setPosts] = useState<BoardPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -103,7 +103,9 @@ export default function BoardPage() {
   }
 
   async function handleCreatePost() {
-    if (!user?.uid) {
+    const userId = firebaseUser?.uid || user?.uid;
+
+    if (!userId) {
       alert('로그인 정보를 확인할 수 없습니다. 다시 로그인해주세요.');
       return;
     }
@@ -132,8 +134,9 @@ export default function BoardPage() {
         title: formData.title.trim(),
         content: formData.content.trim(),
         links: normalizedLinks.filter((link): link is string => Boolean(link)),
-        createdBy: user.uid,
-        createdByName: user.displayName || user.email || '교직원',
+        createdBy: userId,
+        createdByName:
+          user?.displayName || user?.email || firebaseUser?.displayName || firebaseUser?.email || '교직원',
         file: selectedFile,
       });
 

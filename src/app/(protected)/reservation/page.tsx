@@ -114,7 +114,8 @@ export default function ReservationPage() {
     const reservation = getReservation(day, period);
     
     if (reservation) {
-      if (reservation.reservedBy === user?.uid) {
+      const canDelete = reservation.reservedBy === user?.uid || user?.isAdmin;
+      if (canDelete) {
         handleDeleteReservation(reservation);
       }
       return;
@@ -248,6 +249,7 @@ export default function ReservationPage() {
                 {DAYS.map((day) => {
                   const reservation = getReservation(day, period);
                   const isOwn = reservation?.reservedBy === user?.uid;
+                  const canDelete = Boolean(reservation && (isOwn || user?.isAdmin));
                   
                   return (
                     <td
@@ -255,7 +257,7 @@ export default function ReservationPage() {
                       onClick={() => handleCellClick(day, period)}
                       className={`border-3 border-black p-2 cursor-pointer transition-all ${
                         reservation
-                          ? isOwn
+                          ? canDelete
                             ? `${selectedRoom?.color || 'bg-blue-300'} hover:opacity-80`
                             : 'bg-gray-200'
                           : 'hover:bg-gray-100'
@@ -270,7 +272,7 @@ export default function ReservationPage() {
                           {reservation.purpose && (
                             <div className="text-xs text-gray-600 truncate">{reservation.purpose}</div>
                           )}
-                          {isOwn && (
+                          {canDelete && (
                             <div className="text-xs text-red-600 mt-1">클릭하여 취소</div>
                           )}
                         </div>
@@ -290,7 +292,7 @@ export default function ReservationPage() {
         <h3 className="font-bold mb-2">📌 사용 안내</h3>
         <ul className="text-sm text-gray-600 space-y-1">
           <li>• 빈 칸을 클릭하여 예약할 수 있습니다.</li>
-          <li>• 자신의 예약(색상 표시)은 클릭하여 취소할 수 있습니다.</li>
+          <li>• 작성자 본인 또는 관리자 계정은 예약 칸을 클릭해 취소할 수 있습니다.</li>
           <li>• 다른 사람의 예약(회색)은 취소할 수 없습니다.</li>
         </ul>
       </div>
