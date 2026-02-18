@@ -88,7 +88,7 @@ const uploadAttachment = async (file: File, userId: string): Promise<BoardAttach
     url,
     path: filePath,
     size: file.size,
-    contentType: file.type || undefined,
+    ...(file.type ? { contentType: file.type } : {}),
   };
 };
 
@@ -108,17 +108,19 @@ export const createBoardPost = async (data: {
     attachment = await uploadAttachment(data.file, data.createdBy);
   }
 
-  await setDoc(postRef, {
+  const payload = {
     category: data.category,
     title: data.title,
     content: data.content,
     links: data.links,
-    attachment,
+    ...(attachment ? { attachment } : {}),
     createdBy: data.createdBy,
     createdByName: data.createdByName,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  await setDoc(postRef, payload);
 
   return postRef.id;
 };
