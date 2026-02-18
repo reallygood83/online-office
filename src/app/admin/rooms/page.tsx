@@ -65,20 +65,26 @@ export default function AdminRoomsPage() {
 
     setSaving(true);
     try {
+      const roomPayload: {
+        name: string;
+        color: string;
+        order: number;
+        description?: string;
+      } = {
+        name: formData.name,
+        color: formData.color,
+        order: formData.order,
+      };
+
+      const trimmedDescription = formData.description.trim();
+      if (trimmedDescription) {
+        roomPayload.description = trimmedDescription;
+      }
+
       if (editingRoom) {
-        await updateSpecialRoom(editingRoom.id, {
-          name: formData.name,
-          description: formData.description || undefined,
-          color: formData.color,
-          order: formData.order,
-        });
+        await updateSpecialRoom(editingRoom.id, roomPayload);
       } else {
-        await addSpecialRoom({
-          name: formData.name,
-          description: formData.description || undefined,
-          color: formData.color,
-          order: formData.order,
-        });
+        await addSpecialRoom(roomPayload);
       }
       await loadRooms();
       setIsModalOpen(false);

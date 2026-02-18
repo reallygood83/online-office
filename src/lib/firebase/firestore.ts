@@ -338,13 +338,19 @@ export const getSpecialRooms = async () => {
 
 export const addSpecialRoom = async (data: Omit<SpecialRoom, 'id'>) => {
   const docRef = doc(collection(db, 'rooms'));
-  await setDoc(docRef, data);
+  const sanitizedData = Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== undefined)
+  ) as Omit<SpecialRoom, 'id'>;
+  await setDoc(docRef, sanitizedData);
   return docRef.id;
 };
 
 export const updateSpecialRoom = async (id: string, data: Partial<SpecialRoom>) => {
   const docRef = doc(db, 'rooms', id);
-  await updateDoc(docRef, data);
+  const sanitizedData = Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== undefined)
+  ) as Partial<SpecialRoom>;
+  await updateDoc(docRef, sanitizedData);
 };
 
 export const deleteSpecialRoom = async (id: string) => {

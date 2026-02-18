@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 interface NavItem {
   href: string;
@@ -45,6 +47,48 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+
+    if (!user.isAdmin && pathname !== '/admin/verify') {
+      router.replace('/admin/verify');
+      return;
+    }
+
+    if (user.isAdmin && pathname === '/admin/verify') {
+      router.replace('/admin');
+    }
+  }, [loading, pathname, router, user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neo-yellow-200">
+        <div className="text-xl font-bold">로딩중...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  if (!user.isAdmin && pathname !== '/admin/verify') {
+    return null;
+  }
+
+  if (user.isAdmin && pathname === '/admin/verify') {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-neo-yellow-200">

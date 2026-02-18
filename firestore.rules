@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    match /users/{uid} {
+      allow create: if isSelf(uid);
+      allow read: if isSelf(uid) || isAdmin();
+      allow update: if isSelf(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /teachers/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /classes/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /schedules/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /teacherSchedules/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /classSchedules/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /announcements/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /notifications/{docId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /events/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /rooms/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /reservations/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.reservedBy == request.auth.uid;
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.reservedBy == request.auth.uid;
+    }
+
+    match /annualCalendar/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /curriculum/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /curriculumSchedule/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
